@@ -59,3 +59,7 @@ class Session:
 
     def get_active_username(self):
         return self._active_user.get_name()
+
+    def set_filter(self, f):
+        self._filter = f
+

@@ -1,5 +1,6 @@
 from PyQt5.QtMultimedia import QMediaContent, QMediaPlayer
-from PyQt5.QtWidgets import QFileDialog, QApplication, QInputDialog, QMessageBox, QTreeWidgetItem, QMenu, QLabel
+from PyQt5.QtWidgets import QFileDialog, QApplication, QInputDialog, QMessageBox, QTreeWidgetItem, QMenu, QLabel, \
+    QTextEdit, QPushButton, QButtonGroup, QWidget, QVBoxLayout, QCheckBox
 from PyQt5 import uic
 from session import Session
 
@@ -10,13 +11,6 @@ class TreeItem(QTreeWidgetItem):
 
     def get_note(self):
         return self.note
-
-class TreeComment(QTreeWidgetItem):
-    def __init__(self, comment):
-        super().__init__()
-        self.comment = comment
-    def get_comment(self):
-        return self.comment
 
 class videoPlayer:
     def __init__(self):
@@ -33,6 +27,7 @@ class videoPlayer:
         self.ui.btn_note.clicked.connect(self.addNote)
         self.ui.btn_comment.clicked.connect(self.addComment)
         self.ui.btn_del.clicked.connect(self.delNote)
+        self.ui.btn_edit.clicked.connect(self.editNote)
         # Progress bar
         self.player.durationChanged.connect(self.getDuration)
         self.player.positionChanged.connect(self.getPosition)
@@ -40,6 +35,15 @@ class videoPlayer:
         # Tree
         self.ui.wgt_notes.setHeaderLabels(['Position', 'User', 'Note (Comment)'])
         self.ui.wgt_notes.itemDoubleClicked.connect(self.treeItemClicked)
+        self.ui.wgt_notes.itemSelectionChanged.connect(self.selectNote)
+        # combo
+        self.ui.combo_tag.currentIndexChanged.connect(self.filterTag)
+        # checkbox
+        self.ui.general.toggled.connect(lambda c: self.checkBox(c, self.ui.general))
+        self.ui.sound.toggled.connect(lambda c: self.checkBox(c, self.ui.sound))
+        self.ui.music.toggled.connect(lambda c: self.checkBox(c, self.ui.music))
+        self.ui.colour.toggled.connect(lambda c: self.checkBox(c, self.ui.colour))
+        self.ui.vfx.toggled.connect(lambda c: self.checkBox(c, self.ui.vfx))
 
     # Open video file
     def open(self):
@@ -96,8 +100,9 @@ class videoPlayer:
             #                                  None], note)
             try:
                 n = TreeItem(note)
-                text = QLabel(note.get_text())
-                text.setWordWrap(True)
+                text = QTextEdit()
+                text.setText(note.get_text())
+                text.setReadOnly(True)
                 time = QLabel(note.get_timestamp())
                 time.setWordWrap(True)
                 user = QLabel(self.session.get_active_username())
@@ -118,13 +123,12 @@ class videoPlayer:
                 self.ui.wgt_notes.setItemWidget(c, 1, name)
                 self.ui.wgt_notes.setItemWidget(c, 2, message)
 
-
-
     def treeItemClicked(self, item, col):
-        pos_text = item.text(0)
+        pos_text = item.get_note().get_timestamp()
         v = int(pos_text[:pos_text.find('(')])
         self.ui.sld_duration.setValue(v)
         self.player.setPosition(v)
+
     def addNote(self):
         if not self.session.is_active():
             msg = QMessageBox()
@@ -138,6 +142,7 @@ class videoPlayer:
             msg.setText("You haven't loaded a video yet!")
             x = msg.exec_()
             return
+        self.ui.combo_tag.setCurrentText('All')
         time = "{} ({})".format(str(self.ui.sld_duration.value()), self.ui.lab_duration.text())
         text, okPressed = QInputDialog.getText(self.ui, "Add a note at position " + time,
                                                 "Add a note at position " + time)
@@ -169,6 +174,60 @@ class videoPlayer:
                 print(e)
         self.updateNotes()
 
+    def editNote(self):
+        if len(self.ui.wgt_notes.selectedItems()) == 0:
+            return
+        node = self.ui.wgt_notes.selectedItems()[0]
+        if self.ui.btn_edit.text() == 'Edit':
+            self.ui.btn_edit.setText('Save')
+            self.ui.wgt_notes.itemWidget(node, 2).setReadOnly(False)
+        else:
+            self.ui.wgt_notes.itemWidget(node, 2).setReadOnly(True)
+            node.get_note().edit_text(self.ui.wgt_notes.itemWidget(node, 2).toPlainText())
+            self.ui.btn_edit.setText('Edit')
+
+    def checkBox(self, checked, obj):
+        if len(self.ui.wgt_notes.selectedItems()) == 0:
+            obj.setChecked(False)
+            return
+        node = self.ui.wgt_notes.selectedItems()[0]
+        if checked:
+            node.get_note().add_tag(obj.text())
+        else:
+            node.get_note().remove_tag(obj.text())
+        self.updateNotes()
+
+    def filterTag(self):
+        if self.ui.combo_tag.currentText() == "All":
+            self.session.set_filter(None)
+        else:
+            self.session.set_filter(self.ui.combo_tag.currentText())
+        self.updateNotes()
+
+    def selectNote(self):
+        if len(self.ui.wgt_notes.selectedItems()) == 0:
+            return
+        node = self.ui.wgt_notes.selectedItems()[0]
+        if node.get_note().has_tag('General'):
+            self.ui.general.setChecked(True)
+        else:
+            self.ui.general.setChecked(False)
+        if node.get_note().has_tag('Sound'):
+            self.ui.sound.setChecked(True)
+        else:
+            self.ui.sound.setChecked(False)
+        if node.get_note().has_tag('Music'):
+            self.ui.music.setChecked(True)
+        else:
+            self.ui.music.setChecked(False)
+        if node.get_note().has_tag('Colour'):
+            self.ui.colour.setChecked(True)
+        else:
+            self.ui.colour.setChecked(False)
+        if node.get_note().has_tag('VFX'):
+            self.ui.vfx.setChecked(True)
+        else:
+            self.ui.vfx.setChecked(False)
 
 
 if __name__ == "__main__":

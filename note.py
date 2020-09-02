@@ -33,7 +33,9 @@ class Note:
         return tag in self._tags
 
     def add_tag(self, tag):
-        self._tags.append(tag)
+        if tag not in self._tags:
+            self._tags.append(tag)
 
     def remove_tag(self, tag):
-        self._tags.remove(tag)
+        if tag in self._tags:
+            self._tags.remove(tag)
