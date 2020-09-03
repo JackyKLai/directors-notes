@@ -1,10 +1,14 @@
 class Note:
-    def __init__(self, timestamp, text):
+    def __init__(self, timestamp, text, author_name):
         self._timestamp = timestamp
         self._text = text
         self._comments = []
         self._tags = []
         self._fixed = False
+        self._author = author_name
+
+    def get_author(self):
+        return self._author
 
     def get_timestamp(self):
         return self._timestamp

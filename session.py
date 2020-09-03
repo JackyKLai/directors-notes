@@ -1,5 +1,4 @@
 from person import Person
-from note import Note
 
 
 class Session:
@@ -63,3 +62,5 @@ class Session:
     def set_filter(self, f):
         self._filter = f
 
+    def get_all_usernames(self):
+        return [user.get_name() for user in self._users]

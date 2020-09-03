@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>Director's Notes</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <widget class="QVideoWidget" name="wgt_player" native="true">
@@ -270,7 +270,7 @@
     </property>
     <widget class="QMenu" name="menuSession">
      <property name="title">
-      <string>Session</string>
+      <string>Start Session</string>
      </property>
      <addaction name="separator"/>
      <addaction name="new_sess"/>
@@ -278,13 +278,14 @@
     </widget>
     <addaction name="btn_select"/>
     <addaction name="menuSession"/>
+    <addaction name="btn_export"/>
    </widget>
    <addaction name="menuFile"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="btn_select">
    <property name="text">
-    <string>Load video</string>
+    <string>Load Video</string>
    </property>
   </action>
   <action name="btn_data">
@@ -305,6 +306,11 @@
   <action name="load_sess">
    <property name="text">
     <string>Load from file</string>
+   </property>
+  </action>
+  <action name="btn_export">
+   <property name="text">
+    <string>Export Session</string>
    </property>
   </action>
  </widget>

@@ -13,7 +13,7 @@ class Person:
         return self._notes
 
     def add_note(self, timestamp, text):
-        note = Note(timestamp, text)
+        note = Note(timestamp, text, self._name)
         self._notes.append(note)
 
     def delete_note(self, note):

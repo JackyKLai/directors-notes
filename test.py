@@ -1,8 +1,10 @@
+import pickle
+from session import Session
 from PyQt5.QtMultimedia import QMediaContent, QMediaPlayer
 from PyQt5.QtWidgets import QFileDialog, QApplication, QInputDialog, QMessageBox, QTreeWidgetItem, QMenu, QLabel, \
-    QTextEdit, QPushButton, QButtonGroup, QWidget, QVBoxLayout, QCheckBox
+    QTextEdit
 from PyQt5 import uic
-from session import Session
+
 
 class TreeItem(QTreeWidgetItem):
     def __init__(self, note):
@@ -28,6 +30,15 @@ class videoPlayer:
         self.ui.btn_comment.clicked.connect(self.addComment)
         self.ui.btn_del.clicked.connect(self.delNote)
         self.ui.btn_edit.clicked.connect(self.editNote)
+        self.ui.btn_export.triggered.connect(self.saveSession)
+        self.ui.load_sess.triggered.connect(self.loadSession)
+        self.ui.menuSession.setDisabled(True)
+        self.ui.btn_export.setDisabled(True)
+        self.ui.btn_del.setDisabled(True)
+        self.ui.btn_edit.setDisabled(True)
+        self.ui.btn_comment.setDisabled(True)
+        self.ui.btn_note.setDisabled(True)
+        self.ui.btn_play_pause.setDisabled(True)
         # Progress bar
         self.player.durationChanged.connect(self.getDuration)
         self.player.positionChanged.connect(self.getPosition)
@@ -36,6 +47,7 @@ class videoPlayer:
         self.ui.wgt_notes.setHeaderLabels(['Position', 'User', 'Note (Comment)'])
         self.ui.wgt_notes.itemDoubleClicked.connect(self.treeItemClicked)
         self.ui.wgt_notes.itemSelectionChanged.connect(self.selectNote)
+        self.ui.wgt_notes.setColumnWidth(0, 130)
         # combo
         self.ui.combo_tag.currentIndexChanged.connect(self.filterTag)
         # checkbox
@@ -44,12 +56,17 @@ class videoPlayer:
         self.ui.music.toggled.connect(lambda c: self.checkBox(c, self.ui.music))
         self.ui.colour.toggled.connect(lambda c: self.checkBox(c, self.ui.colour))
         self.ui.vfx.toggled.connect(lambda c: self.checkBox(c, self.ui.vfx))
+        self.disableAllCheckbox(True)
 
     # Open video file
     def open(self):
-        self.player.setMedia(QMediaContent(QFileDialog.getOpenFileUrl()[0]))
+        self.player.setMedia(QMediaContent(QFileDialog.getOpenFileUrl(filter="Video File (*.avi *.mp4 *.mov *.flv *.wmv)")[0]))
         self.ui.btn_select.setDisabled(True)
-        # self.player.play()
+        self.ui.menuSession.setDisabled(False)
+        self.ui.btn_export.setDisabled(False)
+        self.ui.btn_play_pause.setDisabled(False)
+        self.ui.btn_note.setDisabled(False)
+        self.player.play()
     # Play video
     def playPause(self):
         if self.player.state()==1:
@@ -95,24 +112,18 @@ class videoPlayer:
         self.ui.wgt_notes.clear()
         notes = self.session.get_notes()
         for note in notes:
-            # n = TreeItem(self.ui.wgt_notes, [note.get_timestamp(),
-            #                                  self.session.get_active_username(),
-            #                                  None], note)
-            try:
-                n = TreeItem(note)
-                text = QTextEdit()
-                text.setText(note.get_text())
-                text.setReadOnly(True)
-                time = QLabel(note.get_timestamp())
-                time.setWordWrap(True)
-                user = QLabel(self.session.get_active_username())
-                user.setWordWrap(True)
-                self.ui.wgt_notes.addTopLevelItem(n)
-                self.ui.wgt_notes.setItemWidget(n, 2, text)
-                self.ui.wgt_notes.setItemWidget(n, 0, time)
-                self.ui.wgt_notes.setItemWidget(n, 1, user)
-            except Exception as e:
-                print(e)
+            n = TreeItem(note)
+            text = QTextEdit()
+            text.setText(note.get_text())
+            text.setReadOnly(True)
+            time = QLabel(note.get_timestamp())
+            time.setWordWrap(True)
+            user = QLabel(note.get_author())
+            user.setWordWrap(True)
+            self.ui.wgt_notes.addTopLevelItem(n)
+            self.ui.wgt_notes.setItemWidget(n, 2, text)
+            self.ui.wgt_notes.setItemWidget(n, 0, time)
+            self.ui.wgt_notes.setItemWidget(n, 1, user)
             for comment in note.get_comments():
                 name, msg = comment
                 name = QLabel(name)
@@ -122,8 +133,11 @@ class videoPlayer:
                 c = QTreeWidgetItem(n, ['Comment', None, None])
                 self.ui.wgt_notes.setItemWidget(c, 1, name)
                 self.ui.wgt_notes.setItemWidget(c, 2, message)
+            self.ui.wgt_notes.expandToDepth(0)
 
     def treeItemClicked(self, item, col):
+        if not isinstance(item, TreeItem):
+            return
         pos_text = item.get_note().get_timestamp()
         v = int(pos_text[:pos_text.find('(')])
         self.ui.sld_duration.setValue(v)
@@ -178,6 +192,8 @@ class videoPlayer:
         if len(self.ui.wgt_notes.selectedItems()) == 0:
             return
         node = self.ui.wgt_notes.selectedItems()[0]
+        if not isinstance(node, TreeItem):
+            return
         if self.ui.btn_edit.text() == 'Edit':
             self.ui.btn_edit.setText('Save')
             self.ui.wgt_notes.itemWidget(node, 2).setReadOnly(False)
@@ -195,7 +211,6 @@ class videoPlayer:
             node.get_note().add_tag(obj.text())
         else:
             node.get_note().remove_tag(obj.text())
-        self.updateNotes()
 
     def filterTag(self):
         if self.ui.combo_tag.currentText() == "All":
@@ -206,8 +221,22 @@ class videoPlayer:
 
     def selectNote(self):
         if len(self.ui.wgt_notes.selectedItems()) == 0:
+            self.disableAllCheckbox(True)
+            self.ui.btn_del.setDisabled(True)
+            self.ui.btn_edit.setDisabled(True)
+            self.ui.btn_comment.setDisabled(True)
             return
         node = self.ui.wgt_notes.selectedItems()[0]
+        if not isinstance(node, TreeItem):
+            self.disableAllCheckbox(True)
+            self.ui.btn_del.setDisabled(False)
+            self.ui.btn_edit.setDisabled(True)
+            self.ui.btn_comment.setDisabled(True)
+            return
+        self.ui.btn_del.setDisabled(False)
+        self.ui.btn_edit.setDisabled(False)
+        self.ui.btn_comment.setDisabled(False)
+        self.disableAllCheckbox(False)
         if node.get_note().has_tag('General'):
             self.ui.general.setChecked(True)
         else:
@@ -229,10 +258,62 @@ class videoPlayer:
         else:
             self.ui.vfx.setChecked(False)
 
+    def saveSession(self):
+        fileName, _ = QFileDialog.getSaveFileName(self.ui, "Save output as...", "", "Data File (*.pkl)")
+        if fileName:
+            file = open(fileName, "wb")
+            pickle.dump(self.session, file)
+            file.close()
+
+    def loadSession(self):
+        file, _ = QFileDialog.getOpenFileName(self.ui, "Open Data File", "","Data File (*.pkl)")
+        if file:
+            pickle_in = open(file, "rb")
+            curr = pickle.load(pickle_in)
+            all_users = curr.get_all_usernames()
+            all_users.append('Create New User')
+            item, ok = QInputDialog.getItem(self.ui, "select user",
+                                            "Pick an existing user to "
+                                            "log in or create a new one", all_users, 0, False)
+            if item and ok:
+                if item == "Create New User":
+                    while True:
+                        text, okPressed = QInputDialog.getText(self.ui, "Enter your name:", "Enter your name:")
+                        if okPressed and text != '':
+                            try:
+                                curr.new_user(text)
+                                break
+                            except NameError:
+                                msg = QMessageBox()
+                                msg.setWindowTitle("User already exists")
+                                msg.setText("A user with the same name already exists, you might want to pick a different username.")
+                                x = msg.exec_()
+                                continue
+                        elif not okPressed:
+                            return
+                        elif text == "":
+                            msg = QMessageBox()
+                            msg.setWindowTitle("Name format error")
+                            msg.setText("Your name has at least one character, right?")
+                            x = msg.exec_()
+                else:
+                    curr.set_active(item)
+                self.session = curr
+                self.updateNotes()
+                self.ui.menuSession.setDisabled(True)
+
+    def disableAllCheckbox(self, bool):
+        self.ui.label.setDisabled(bool)
+        self.ui.general.setDisabled(bool)
+        self.ui.sound.setDisabled(bool)
+        self.ui.music.setDisabled(bool)
+        self.ui.colour.setDisabled(bool)
+        self.ui.vfx.setDisabled(bool)
+        
 
 if __name__ == "__main__":
     import sys
     app = QApplication(sys.argv)
     myPlayer = videoPlayer()
     myPlayer.ui.show()
-    app.exec()
+    sys.exit(app.exec_())
