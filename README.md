@@ -6,7 +6,7 @@ On Windows (MacOS doesn't seem to have this problem), the built-in video player 
 ### Getting Started
 Import a video by going to File -> Load Video, then start a new session (File -> Start Session -> New). Enter your name in the prompt and click ok.
 ### Adding and editing a note
-Use the slider and the play-pause button to stop at a frame. You can add a note by clicking on the bottom left "Add Note" button. Selecting the note in the list on the left enables the "Edit" button. After editing the content of a note, click on the same button to save changes.
+Use the slider and the play-pause button to stop at a frame. You can add a note by clicking on the bottom left "Add Note" button. Double-clicking on a note takes you to the timestamp it refers to in the video. Selecting the note in the list on the left enables the "Edit" button. After editing the content of a note, click on the same button to save changes.
 ### Comments
 You can leave comments on a note by selecting it and clicking on the "Comment" button. Comments can only be left on a note and can't be edited. If you don't like what you've entered, you can delete a comment or a note by selecting it and clicking on the "Delete" button.
 ### Tags and filters
