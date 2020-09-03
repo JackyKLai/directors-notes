@@ -43,3 +43,6 @@ class Note:
     def remove_tag(self, tag):
         if tag in self._tags:
             self._tags.remove(tag)
+
+    def get_position_integer(self):
+        return int(self._timestamp[:self._timestamp.find('(')])
