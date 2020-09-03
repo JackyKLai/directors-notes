@@ -1,7 +1,9 @@
 # Director's Notes
 Taking timestamped notes on a video
 ## Prerequisite
-On Windows (MacOS doesn't seem to have this problem), the built-in video player only supports the .avi format natively. For .mp4 and other formats, download a codec like [this one](http://www.codecguide.com/configuration_tips.htm?version=1570) before launching the app.
+On Windows (MacOS doesn't seem to have this problem), the built-in video player only supports the .avi format natively. For .mp4 and other formats, download a codec like [this one](http://www.codecguide.com/configuration_tips.htm?version=1570) and install it before launching the app.
+## Releases
+Releases can be found [here](https://github.com/JackyKLai/directors-notes/releases).
 ## Usage
 ### Getting Started
 Import a video by going to File -> Load Video, then start a new session (File -> Start Session -> New). Enter your name in the prompt and click ok.
