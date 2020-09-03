@@ -1,8 +1,21 @@
-from session import Session
+import os
 import pickle
+from session import Session
 from PyQt5.QtMultimedia import QMediaContent, QMediaPlayer
 from PyQt5.QtWidgets import QFileDialog, QApplication, QInputDialog, QMessageBox, QTreeWidgetItem, QLabel, QTextEdit
 from PyQt5 import uic
+
+
+# Define function to import external files when using PyInstaller.
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
 
 
 class TreeItem(QTreeWidgetItem):
@@ -18,8 +31,10 @@ class dirNotes:
     def __init__(self):
         # Initialization
         self.session = Session()
-        self.ui = uic.loadUi('video_1.ui')  # Loading the ui program designed by designer
-        self.ui.setFixedSize(1580, 750)
+        layout = resource_path("video_1.ui")
+        # self.ui = uic.loadUi('video_1.ui')  # Loading the ui program designed by designer
+        self.ui = uic.loadUi(layout)
+        self.ui.setFixedSize(1870, 780)
         # player
         self.player = QMediaPlayer()
         self.player.setVideoOutput(self.ui.wgt_player)
