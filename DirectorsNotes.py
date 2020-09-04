@@ -77,13 +77,30 @@ class dirNotes:
 
     # Open video file
     def open(self):
-        self.player.setMedia(QMediaContent(QFileDialog.getOpenFileUrl(filter="Video File (*.avi *.mp4 *.mov *.flv *.wmv)")[0]))
-        self.ui.btn_select.setDisabled(True)
-        self.ui.menuSession.setDisabled(False)
-        self.ui.btn_export.setDisabled(False)
-        self.ui.btn_play_pause.setDisabled(False)
-        self.player.play()
-        self.player.pause()
+        if self.session.is_active():
+            message = QMessageBox()
+            message.setText('Loading a new video means closing your current notes session.')
+            message.setWindowTitle('New Video')
+            yes = message.addButton('Save my current notes', QMessageBox.YesRole)
+            message.addButton('Discard my current notes', QMessageBox.NoRole)
+            cancel = message.addButton("Keep my current video", QMessageBox.RejectRole)
+            x = message.exec_()
+            if message.clickedButton() == yes:
+                self.saveSession()
+            elif message.clickedButton() == cancel:
+                return
+        url = QFileDialog.getOpenFileUrl(self.ui, filter="Video File (*.avi *.mp4 *.mov *.flv *.wmv)")[0]
+        if url.fileName():
+            self.session = Session()
+            QtCore.QCoreApplication.processEvents()
+            self.updateNotes()
+            QtCore.QCoreApplication.processEvents()
+            self.player.setMedia(QMediaContent(url))
+            self.ui.menuSession.setDisabled(False)
+            self.ui.btn_export.setDisabled(False)
+            self.ui.btn_play_pause.setDisabled(False)
+            self.player.play()
+            self.player.pause()
     # Play video
     def playPause(self):
         if self.player.state()==1:
