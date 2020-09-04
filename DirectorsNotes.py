@@ -116,7 +116,7 @@ class dirNotes:
             text, okPressed = QInputDialog.getText(self.ui, "Enter your name:", "Enter your name:")
             if okPressed and text != '':
                 self.session.new_user(text)
-                self.session.set_video_length(self.player.metaData('Duration'))
+                self.session.set_video_length(self.player.duration())
                 self.ui.menuSession.setDisabled(True)
                 self.ui.btn_note.setDisabled(False)
                 return
@@ -138,7 +138,7 @@ class dirNotes:
                 text.setText(note.get_text())
                 text.setReadOnly(True)
                 text.setFixedHeight(80)
-                time = QLabel(note.get_timestamp())
+                time = QLabel(str(note.get_timestamp()))
                 time.setWordWrap(True)
                 user = QLabel(note.get_author())
                 user.setWordWrap(True)
@@ -160,20 +160,19 @@ class dirNotes:
     def treeItemClicked(self, item, col):
         if not isinstance(item, TreeItem):
             return
-        pos_text = item.get_note().get_timestamp()
-        v = item.get_note().get_position_integer()
+        v = item.get_note().get_timestamp()
         self.ui.sld_duration.setValue(v)
         self.player.setPosition(v)
         self.player.pause()
 
     def addNote(self):
         self.ui.combo_tag.setCurrentText('All')
-        time = "{} ({})".format(str(self.ui.sld_duration.value()), self.ui.lab_duration.text())
-        text, okPressed = QInputDialog.getText(self.ui, "Add a note at position " + time,
-                                                "Add a note at position " + time)
+        text, okPressed = QInputDialog.getText(self.ui, "Add a note at position " + str(self.ui.sld_duration.value()),
+                                                "Add a note at position " + str(self.ui.sld_duration.value()))
         if okPressed and text != '':
-            self.session.write_note(time, text)
+            self.session.write_note(self.ui.sld_duration.value(), text)
             self.updateNotes()
+
     def addComment(self):
         if len(self.ui.wgt_notes.selectedItems()) == 0:
             return
@@ -286,7 +285,7 @@ class dirNotes:
         if file:
             pickle_in = open(file, "rb")
             curr = pickle.load(pickle_in)
-            if curr.get_video_length() != self.player.metaData('Duration'):
+            if curr.get_video_length() != self.player.duration():
                 msg = QMessageBox()
                 msg.setWindowTitle("Video mismatch")
                 msg.setText("The video associated with these notes don't seem to match the one you loaded.")
@@ -351,4 +350,5 @@ if __name__ == "__main__":
     myPlayer = dirNotes()
     myPlayer.ui.show()
     app.aboutToQuit.connect(myPlayer.handle_exit)
-    sys.exit(app.exec_())
+    # sys.exit(app.exec_())
+    app.exec_()

@@ -28,7 +28,7 @@ class Session:
             self._all_notes.extend(user.get_notes())
         if self._filter:
             self._all_notes = [note for note in self._all_notes if note.has_tag(self._filter)]
-        self._all_notes.sort(key=lambda note: note.get_position_integer())
+        self._all_notes.sort(key=lambda note: note.get_timestamp())
 
     def get_notes(self):
         self.compile_notes()
