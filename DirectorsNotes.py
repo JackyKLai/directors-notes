@@ -3,7 +3,7 @@ import pickle
 from session import Session
 from PyQt5.QtMultimedia import QMediaContent, QMediaPlayer
 from PyQt5.QtWidgets import QFileDialog, QApplication, QInputDialog, QMessageBox, QTreeWidgetItem, QLabel, QTextEdit
-from PyQt5 import uic
+from PyQt5 import uic, QtCore
 
 
 # Define function to import external files when using PyInstaller.
@@ -129,6 +129,7 @@ class dirNotes:
                 x = msg.exec_()
     def updateNotes(self):
         self.ui.wgt_notes.clear()
+        self.ui.wgt_notes.clearSelection()
         notes = self.session.get_notes()
         if len(notes) > 0:
             self.ui.combo_tag.setDisabled(False)
@@ -193,7 +194,10 @@ class dirNotes:
         else:
             tup = (self.ui.wgt_notes.itemWidget(node, 1).text(), self.ui.wgt_notes.itemWidget(node, 2).text())
             node.parent().get_note().remove_comment(tup)
+        QtCore.QCoreApplication.processEvents()
         self.updateNotes()
+        QtCore.QCoreApplication.processEvents()
+
 
     def editNote(self):
         if len(self.ui.wgt_notes.selectedItems()) == 0:
@@ -201,6 +205,7 @@ class dirNotes:
         node = self.ui.wgt_notes.selectedItems()[0]
         if not isinstance(node, TreeItem):
             return
+        QtCore.QCoreApplication.processEvents()
         if self.ui.btn_edit.text() == 'Edit':
             self.ui.btn_edit.setText('Save')
             self.ui.wgt_notes.itemWidget(node, 2).setReadOnly(False)
@@ -208,6 +213,7 @@ class dirNotes:
             self.ui.wgt_notes.itemWidget(node, 2).setReadOnly(True)
             node.get_note().edit_text(self.ui.wgt_notes.itemWidget(node, 2).toPlainText())
             self.ui.btn_edit.setText('Edit')
+        QtCore.QCoreApplication.processEvents()
 
     def checkBox(self, checked, obj):
         if len(self.ui.wgt_notes.selectedItems()) == 0:
@@ -240,6 +246,9 @@ class dirNotes:
             if isinstance(node, TreeItem):
                 self.ui.btn_comment.setDisabled(False)
                 self.disableAllCheckbox(False)
+            else:
+                self.ui.btn_comment.setDisabled(True)
+                self.disableAllCheckbox(True)
             return
         if not isinstance(node, TreeItem):
             self.disableAllCheckbox(True)
@@ -345,8 +354,9 @@ class dirNotes:
             self.saveSession()
 
 if __name__ == "__main__":
-    import sys
-    app = QApplication(sys.argv)
+    # import sys
+    # app = QApplication(sys.argv)
+    app = QApplication([])
     myPlayer = dirNotes()
     myPlayer.ui.show()
     app.aboutToQuit.connect(myPlayer.handle_exit)
