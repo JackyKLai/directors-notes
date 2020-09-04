@@ -82,7 +82,6 @@ class dirNotes:
         self.ui.menuSession.setDisabled(False)
         self.ui.btn_export.setDisabled(False)
         self.ui.btn_play_pause.setDisabled(False)
-        # self.ui.btn_note.setDisabled(False)
         self.player.play()
         self.player.pause()
     # Play video
@@ -117,6 +116,7 @@ class dirNotes:
             text, okPressed = QInputDialog.getText(self.ui, "Enter your name:", "Enter your name:")
             if okPressed and text != '':
                 self.session.new_user(text)
+                self.session.set_video_length(self.player.metaData('Duration'))
                 self.ui.menuSession.setDisabled(True)
                 self.ui.btn_note.setDisabled(False)
                 return
@@ -167,18 +167,6 @@ class dirNotes:
         self.player.pause()
 
     def addNote(self):
-        # if not self.session.is_active():
-        #     msg = QMessageBox()
-        #     msg.setWindowTitle("Session not active")
-        #     msg.setText("You haven't started / loaded a session yet!")
-        #     x = msg.exec_()
-        #     return
-        # if not self.player.isVideoAvailable():
-        #     msg = QMessageBox()
-        #     msg.setWindowTitle("Video missing")
-        #     msg.setText("You haven't loaded a video yet!")
-        #     x = msg.exec_()
-        #     return
         self.ui.combo_tag.setCurrentText('All')
         time = "{} ({})".format(str(self.ui.sld_duration.value()), self.ui.lab_duration.text())
         text, okPressed = QInputDialog.getText(self.ui, "Add a note at position " + time,
@@ -298,6 +286,12 @@ class dirNotes:
         if file:
             pickle_in = open(file, "rb")
             curr = pickle.load(pickle_in)
+            if curr.get_video_length() != self.player.metaData('Duration'):
+                msg = QMessageBox()
+                msg.setWindowTitle("Video mismatch")
+                msg.setText("The video associated with these notes don't seem to match the one you loaded.")
+                x = msg.exec_()
+                return
             all_users = curr.get_all_usernames()
             all_users.append('Create New User')
             item, ok = QInputDialog.getItem(self.ui, "select user",
@@ -338,11 +332,23 @@ class dirNotes:
         self.ui.music.setDisabled(bool)
         self.ui.colour.setDisabled(bool)
         self.ui.vfx.setDisabled(bool)
-        
+
+    def handle_exit(self):
+        if not self.session.is_active():
+            return
+        message = QMessageBox()
+        message.setText('Save before closing?')
+        message.setWindowTitle('Save')
+        yes = message.addButton('Yes', QMessageBox.YesRole)
+        message.addButton('No, already saved', QMessageBox.NoRole)
+        x = message.exec_()
+        if message.clickedButton() == yes:
+            self.saveSession()
 
 if __name__ == "__main__":
     import sys
     app = QApplication(sys.argv)
     myPlayer = dirNotes()
     myPlayer.ui.show()
+    app.aboutToQuit.connect(myPlayer.handle_exit)
     sys.exit(app.exec_())

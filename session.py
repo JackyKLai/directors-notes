@@ -8,6 +8,7 @@ class Session:
         self._filter = None
         self._all_notes = []
         self._active = False
+        self._video_length = None
 
     def new_user(self, name):
         all_names = [person.get_name() for person in self._users]
@@ -27,7 +28,7 @@ class Session:
             self._all_notes.extend(user.get_notes())
         if self._filter:
             self._all_notes = [note for note in self._all_notes if note.has_tag(self._filter)]
-        self._all_notes.sort(key=lambda note: note.get_timestamp())
+        self._all_notes.sort(key=lambda note: note.get_position_integer())
 
     def get_notes(self):
         self.compile_notes()
@@ -64,3 +65,9 @@ class Session:
 
     def get_all_usernames(self):
         return [user.get_name() for user in self._users]
+
+    def set_video_length(self, length):
+        self._video_length = length
+
+    def get_video_length(self):
+        return self._video_length
