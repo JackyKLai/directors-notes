@@ -43,7 +43,6 @@ class dirNotes:
         self.player = QMediaPlayer()
         self.player.setVideoOutput(self.ui.wgt_player)
         # Buttons and Actions
-        self.ui.btn_select.triggered.connect(self.open)
         self.ui.btn_play_pause.clicked.connect(self.playPause)
         self.ui.new_sess.triggered.connect(self.newSession)
         self.ui.btn_note.clicked.connect(self.addNote)
@@ -52,7 +51,7 @@ class dirNotes:
         self.ui.btn_edit.clicked.connect(self.editNote)
         self.ui.btn_export.triggered.connect(self.saveSession)
         self.ui.load_sess.triggered.connect(self.loadSession)
-        self.ui.menuSession.setDisabled(True)
+        self.ui.menuSession.setDisabled(False)
         self.ui.btn_export.setDisabled(True)
         self.ui.btn_del.setDisabled(True)
         self.ui.btn_edit.setDisabled(True)
@@ -83,29 +82,24 @@ class dirNotes:
 
     # Open video file
     def open(self):
-        if self.session.is_active():
-            message = QMessageBox()
-            message.setText('Loading a new video means closing your current notes session.')
-            message.setWindowTitle('New Video')
-            yes = message.addButton('Save my current notes', QMessageBox.YesRole)
-            message.addButton('Discard my current notes', QMessageBox.NoRole)
-            cancel = message.addButton("Keep my current video", QMessageBox.RejectRole)
-            x = message.exec_()
-            if message.clickedButton() == yes:
-                self.saveSession()
-            elif message.clickedButton() == cancel:
-                return
-        url = QFileDialog.getOpenFileUrl(self.ui, filter="Video File (*.avi *.mp4 *.mov *.flv *.wmv)")[0]
+        # if self.session.is_active():
+        #     message = QMessageBox()
+        #     message.setText('Loading a new video means closing your current notes session.')
+        #     message.setWindowTitle('New Video')
+        #     yes = message.addButton('Save my current notes', QMessageBox.YesRole)
+        #     message.addButton('Discard my current notes', QMessageBox.NoRole)
+        #     cancel = message.addButton("Keep my current video", QMessageBox.RejectRole)
+        #     x = message.exec_()
+        #     if message.clickedButton() == yes:
+        #         self.saveSession()
+        #     elif message.clickedButton() == cancel:
+        #         return
+        url = QFileDialog.getOpenFileUrl(self.ui, 'Select A Video',
+                                         filter="Video File (*.avi *.mp4 *.mov *.flv *.wmv)")[0]
         if url.fileName():
-            self.session = Session()
-            QtCore.QCoreApplication.processEvents()
-            self.updateNotes()
-            QtCore.QCoreApplication.processEvents()
             self.player.setMedia(QMediaContent(url))
-            self.ui.menuSession.setDisabled(False)
-            self.ui.btn_play_pause.setDisabled(False)
-            self.player.play()
-            self.player.pause()
+            return url
+
     # Play video
     def playPause(self):
         if self.player.state()==1:
@@ -134,14 +128,19 @@ class dirNotes:
         self.displayTime(self.ui.sld_duration.maximum()-v)
     # New session new user
     def newSession(self):
+        self.handle_exit()
+        url = self.open()
+        if not url:
+            return
         while True:
             text, okPressed = QInputDialog.getText(self.ui, "Enter your name:", "Enter your name:")
             if okPressed and text != '':
+                self.session = Session()
                 self.session.new_user(text)
                 self.session.set_video_length(self.player.duration())
-                self.ui.menuSession.setDisabled(True)
                 self.ui.btn_note.setDisabled(False)
                 self.ui.btn_export.setDisabled(False)
+                self.set_up_media()
                 return
             elif not okPressed:
                 return
@@ -324,6 +323,9 @@ class dirNotes:
             self.ui.btn_export.setDisabled(True)
 
     def loadSession(self):
+        url = self.open()
+        if not url:
+            return
         file, _ = QFileDialog.getOpenFileName(self.ui, "Open Data File", "","Data File (*.pkl)")
         if file:
             pickle_in = open(file, "rb")
@@ -362,12 +364,13 @@ class dirNotes:
                             x = msg.exec_()
                 else:
                     curr.set_active(item)
+                self.set_up_media()
                 self.session = curr
                 self.save_path = file
                 self.updateNotes()
                 self.ui.btn_export.setDisabled(True)
                 self.ui.btn_note.setDisabled(False)
-                self.ui.menuSession.setDisabled(True)
+                self.ui.menuSession.setDisabled(False)
 
     def disableAllCheckbox(self, bool):
         self.ui.label.setDisabled(bool)
@@ -378,16 +381,25 @@ class dirNotes:
         self.ui.vfx.setDisabled(bool)
 
     def handle_exit(self):
-        if not self.session.is_active() or self.ui.btn_export.isDisabled():
+        if not self.session.is_active() or not self.ui.btn_export.isEnabled():
             return
         message = QMessageBox()
-        message.setText('Save changes before closing?')
+        message.setText('Save changes before closing the current session?')
         message.setWindowTitle('Save')
         yes = message.addButton('Yes', QMessageBox.YesRole)
         message.addButton('No', QMessageBox.NoRole)
         x = message.exec_()
         if message.clickedButton() == yes:
             self.saveSession()
+
+    def set_up_media(self):
+        QtCore.QCoreApplication.processEvents()
+        self.updateNotes()
+        QtCore.QCoreApplication.processEvents()
+        self.ui.menuSession.setDisabled(False)
+        self.ui.btn_play_pause.setDisabled(False)
+        self.player.play()
+        self.player.pause()
 
 if __name__ == "__main__":
     # import sys

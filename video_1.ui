@@ -276,7 +276,6 @@
      <addaction name="new_sess"/>
      <addaction name="load_sess"/>
     </widget>
-    <addaction name="btn_select"/>
     <addaction name="menuSession"/>
     <addaction name="btn_export"/>
    </widget>
