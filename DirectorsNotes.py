@@ -218,6 +218,7 @@ class dirNotes:
         node = self.ui.wgt_notes.selectedItems()[0]
         if isinstance(node, TreeItem):
             self.session.delete_note(node.get_note())
+            self.ui.btn_export.setDisabled(False)
         else:
             tup = (self.ui.wgt_notes.itemWidget(node, 1).text(), self.ui.wgt_notes.itemWidget(node, 2).text())
             node.parent().get_note().remove_comment(tup)
