@@ -1,9 +1,12 @@
 import os
 import pickle
-from session import Session
+import sys
+
+from PyQt5 import uic, QtCore
 from PyQt5.QtMultimedia import QMediaContent, QMediaPlayer
 from PyQt5.QtWidgets import QFileDialog, QApplication, QInputDialog, QMessageBox, QTreeWidgetItem, QLabel, QTextEdit
-from PyQt5 import uic, QtCore
+
+from session import Session
 
 
 # Define function to import external files when using PyInstaller.
@@ -32,6 +35,7 @@ class dirNotes:
         # Initialization
         self.session = Session()
         layout = resource_path("video_1.ui")
+        self.save_path = None
         # self.ui = uic.loadUi('video_1.ui')  # Loading the ui program designed by designer
         self.ui = uic.loadUi(layout)
         self.ui.setFixedSize(1870, 780)
@@ -97,7 +101,6 @@ class dirNotes:
             QtCore.QCoreApplication.processEvents()
             self.player.setMedia(QMediaContent(url))
             self.ui.menuSession.setDisabled(False)
-            self.ui.btn_export.setDisabled(False)
             self.ui.btn_play_pause.setDisabled(False)
             self.player.play()
             self.player.pause()
@@ -136,6 +139,7 @@ class dirNotes:
                 self.session.set_video_length(self.player.duration())
                 self.ui.menuSession.setDisabled(True)
                 self.ui.btn_note.setDisabled(False)
+                self.ui.btn_export.setDisabled(False)
                 return
             elif not okPressed:
                 return
@@ -144,6 +148,7 @@ class dirNotes:
                 msg.setWindowTitle("Name format error")
                 msg.setText("Your name has at least one character, right?")
                 x = msg.exec_()
+
     def updateNotes(self):
         self.ui.wgt_notes.clear()
         self.ui.wgt_notes.clearSelection()
@@ -188,6 +193,7 @@ class dirNotes:
         text, okPressed = QInputDialog.getText(self.ui, "Add a note at position " + str(self.ui.sld_duration.value()),
                                                 "Add a note at position " + str(self.ui.sld_duration.value()))
         if okPressed and text != '':
+            self.ui.btn_export.setDisabled(False)
             self.session.write_note(self.ui.sld_duration.value(), text)
             self.updateNotes()
 
@@ -200,8 +206,10 @@ class dirNotes:
         text, okPressed = QInputDialog.getText(self.ui, "Write your comment below: ",
                                                "Write your comment below: ")
         if okPressed and text != '':
+            self.ui.btn_export.setDisabled(False)
             node.get_note().add_comment(self.session.get_active_username(), text)
             self.updateNotes()
+
     def delNote(self):
         if len(self.ui.wgt_notes.selectedItems()) == 0:
             return 
@@ -211,10 +219,10 @@ class dirNotes:
         else:
             tup = (self.ui.wgt_notes.itemWidget(node, 1).text(), self.ui.wgt_notes.itemWidget(node, 2).text())
             node.parent().get_note().remove_comment(tup)
+            self.ui.btn_export.setDisabled(False)
         QtCore.QCoreApplication.processEvents()
         self.updateNotes()
         QtCore.QCoreApplication.processEvents()
-
 
     def editNote(self):
         if len(self.ui.wgt_notes.selectedItems()) == 0:
@@ -229,6 +237,7 @@ class dirNotes:
         else:
             self.ui.wgt_notes.itemWidget(node, 2).setReadOnly(True)
             node.get_note().edit_text(self.ui.wgt_notes.itemWidget(node, 2).toPlainText())
+            self.ui.btn_export.setDisabled(False)
             self.ui.btn_edit.setText('Edit')
         QtCore.QCoreApplication.processEvents()
 
@@ -237,6 +246,7 @@ class dirNotes:
             obj.setChecked(False)
             return
         node = self.ui.wgt_notes.selectedItems()[0]
+        self.ui.btn_export.setDisabled(False)
         if checked:
             node.get_note().add_tag(obj.text())
         else:
@@ -300,11 +310,13 @@ class dirNotes:
             self.ui.vfx.setChecked(False)
 
     def saveSession(self):
-        fileName, _ = QFileDialog.getSaveFileName(self.ui, "Save output as...", "", "Data File (*.pkl)")
-        if fileName:
-            file = open(fileName, "wb")
+        if not self.save_path:
+            self.save_path, _ = QFileDialog.getSaveFileName(self.ui, "Save output as...", "", "Data File (*.pkl)")
+        if self.save_path:
+            file = open(self.save_path, "wb")
             pickle.dump(self.session, file)
             file.close()
+            self.ui.btn_export.setDisabled(True)
 
     def loadSession(self):
         file, _ = QFileDialog.getOpenFileName(self.ui, "Open Data File", "","Data File (*.pkl)")
@@ -346,7 +358,9 @@ class dirNotes:
                 else:
                     curr.set_active(item)
                 self.session = curr
+                self.save_path = file
                 self.updateNotes()
+                self.ui.btn_export.setDisabled(True)
                 self.ui.btn_note.setDisabled(False)
                 self.ui.menuSession.setDisabled(True)
 
@@ -359,13 +373,13 @@ class dirNotes:
         self.ui.vfx.setDisabled(bool)
 
     def handle_exit(self):
-        if not self.session.is_active():
+        if not self.session.is_active() or self.ui.btn_export.isDisabled():
             return
         message = QMessageBox()
-        message.setText('Save before closing?')
+        message.setText('Save changes before closing?')
         message.setWindowTitle('Save')
         yes = message.addButton('Yes', QMessageBox.YesRole)
-        message.addButton('No, already saved', QMessageBox.NoRole)
+        message.addButton('No', QMessageBox.NoRole)
         x = message.exec_()
         if message.clickedButton() == yes:
             self.saveSession()

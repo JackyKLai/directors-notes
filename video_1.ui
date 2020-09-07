@@ -310,7 +310,7 @@
   </action>
   <action name="btn_export">
    <property name="text">
-    <string>Export Session</string>
+    <string>Export / Save</string>
    </property>
   </action>
   <action name="btn_save">
