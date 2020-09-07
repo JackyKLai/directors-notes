@@ -68,6 +68,8 @@ class dirNotes:
         self.ui.wgt_notes.setHeaderLabels(['Position', 'User', 'Note (Comment)'])
         self.ui.wgt_notes.itemDoubleClicked.connect(self.treeItemClicked)
         self.ui.wgt_notes.itemSelectionChanged.connect(self.selectNote)
+        self.ui.wgt_notes.setStyleSheet('padding: 5px 0;')
+        self.ui.wgt_notes.setExpandsOnDoubleClick(False)
         # combo
         self.ui.combo_tag.currentIndexChanged.connect(self.filterTag)
         self.ui.combo_tag.setDisabled(True)
@@ -160,6 +162,7 @@ class dirNotes:
                 text = QTextEdit()
                 text.setText(note.get_text())
                 text.setReadOnly(True)
+                text.setStyleSheet("background-color: rgb(236, 240, 241);")
                 text.setFixedHeight(80)
                 time = QLabel(str(note.get_timestamp()))
                 time.setWordWrap(True)
@@ -232,12 +235,14 @@ class dirNotes:
             return
         QtCore.QCoreApplication.processEvents()
         if self.ui.btn_edit.text() == 'Edit':
+            self.ui.wgt_notes.itemWidget(node, 2).setStyleSheet("background-color: rgb(255,255,255)")
             self.ui.btn_edit.setText('Save')
             self.ui.wgt_notes.itemWidget(node, 2).setReadOnly(False)
         else:
             self.ui.wgt_notes.itemWidget(node, 2).setReadOnly(True)
             node.get_note().edit_text(self.ui.wgt_notes.itemWidget(node, 2).toPlainText())
             self.ui.btn_export.setDisabled(False)
+            self.ui.wgt_notes.itemWidget(node, 2).setStyleSheet("background-color: rgb(236, 240, 241)")
             self.ui.btn_edit.setText('Edit')
         QtCore.QCoreApplication.processEvents()
 
