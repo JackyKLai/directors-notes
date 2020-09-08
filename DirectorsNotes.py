@@ -69,7 +69,6 @@ class dirNotes:
         self.ui.wgt_notes.setHeaderLabels(['Position', 'User', 'Note (Comment)'])
         self.ui.wgt_notes.itemDoubleClicked.connect(self.treeItemClicked)
         self.ui.wgt_notes.itemSelectionChanged.connect(self.selectNote)
-        self.ui.wgt_notes.setStyleSheet('padding: 5px 0;')
         self.ui.wgt_notes.setExpandsOnDoubleClick(False)
         # combo
         self.ui.combo_tag.currentIndexChanged.connect(self.filterTag)
@@ -179,8 +178,9 @@ class dirNotes:
                     name = QLabel(name)
                     name.setWordWrap(True)
                     message = QLabel(msg)
+                    message.setFixedHeight(40)
                     message.setWordWrap(True)
-                    c = QTreeWidgetItem(n, ['Comment', None, None])
+                    c = QTreeWidgetItem(n, ['', None, None])
                     self.ui.wgt_notes.setItemWidget(c, 1, name)
                     self.ui.wgt_notes.setItemWidget(c, 2, message)
                 self.ui.wgt_notes.expandToDepth(0)
