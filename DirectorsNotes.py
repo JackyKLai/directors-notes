@@ -59,6 +59,8 @@ class dirNotes:
         self.ui.btn_note.setDisabled(True)
         self.ui.btn_play_pause.setDisabled(True)
         self.ui.btn_note.setDisabled(True)
+        self.ui.btn_save_as.triggered.connect(self.save_as)
+        self.ui.btn_save_as.setDisabled(True)
         # Progress bar
         self.player.durationChanged.connect(self.getDuration)
         self.player.positionChanged.connect(self.getPosition)
@@ -140,6 +142,7 @@ class dirNotes:
                 self.session.set_video_length(self.player.duration())
                 self.ui.btn_note.setDisabled(False)
                 self.ui.btn_export.setDisabled(False)
+                self.ui.btn_save_as.setDisabled(False)
                 self.set_up_media()
                 return
             elif not okPressed:
@@ -324,6 +327,7 @@ class dirNotes:
             self.ui.btn_export.setDisabled(True)
 
     def loadSession(self):
+        self.handle_exit()
         url = self.open()
         if not url:
             return
@@ -372,6 +376,7 @@ class dirNotes:
                 self.ui.btn_export.setDisabled(True)
                 self.ui.btn_note.setDisabled(False)
                 self.ui.menuSession.setDisabled(False)
+                self.ui.btn_save_as.setDisabled(False)
 
     def disableAllCheckbox(self, bool):
         self.ui.label.setDisabled(bool)
@@ -401,6 +406,14 @@ class dirNotes:
         self.ui.btn_play_pause.setDisabled(False)
         self.player.play()
         self.player.pause()
+
+    def save_as(self):
+        self.save_path, _ = QFileDialog.getSaveFileName(self.ui, "Save output as...", "", "Data File (*.pkl)")
+        if self.save_path:
+            file = open(self.save_path, "wb")
+            pickle.dump(self.session, file)
+            file.close()
+            self.ui.btn_export.setDisabled(True)
 
 if __name__ == "__main__":
     # import sys
