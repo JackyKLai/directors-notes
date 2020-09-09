@@ -119,10 +119,8 @@ class dirNotes:
         # self.displayTime(self.ui.sld_duration.maximum()-p)
         self.displayTime(p)
     # Show time remaining
-    def displayTime(self, ms):
-        minutes = int(ms/60000)
-        seconds = int((ms-minutes*60000)/1000)
-        self.ui.lab_duration.setText('{}:{}'.format(minutes, seconds))
+    def displayTime(self, millis):
+        self.ui.lab_duration.setText(self.convert_ms(millis))
     # Update video location with progress bar
     def updatePosition(self, v):
         self.player.setPosition(v)
@@ -165,7 +163,7 @@ class dirNotes:
                 text.setReadOnly(True)
                 text.setStyleSheet("background-color: rgb(236, 240, 241);")
                 text.setFixedHeight(80)
-                time = QLabel(str(note.get_timestamp()))
+                time = QLabel(str(self.convert_ms(note.get_timestamp())))
                 time.setWordWrap(True)
                 user = QLabel(note.get_author())
                 user.setWordWrap(True)
@@ -414,6 +412,14 @@ class dirNotes:
             pickle.dump(self.session, file)
             file.close()
             self.ui.btn_export.setDisabled(True)
+
+    def convert_ms(self, millis):
+        seconds = (millis / 1000) % 60
+        seconds = int(seconds)
+        minutes = (millis / (1000 * 60)) % 60
+        minutes = int(minutes)
+        hours = (millis / (1000 * 60 * 60)) % 24
+        return "%02d:%02d:%02d" % (hours, minutes, seconds)
 
 if __name__ == "__main__":
     # import sys
