@@ -1,11 +1,11 @@
 import os
 import pickle
 import sys
-
 from PyQt5 import uic, QtCore
 from PyQt5.QtMultimedia import QMediaContent, QMediaPlayer
-from PyQt5.QtWidgets import QFileDialog, QApplication, QInputDialog, QMessageBox, QTreeWidgetItem, QLabel, QTextEdit
-
+from PyQt5.QtWidgets import QFileDialog, QApplication, QInputDialog, QMessageBox, QTreeWidgetItem, QLabel, QTextEdit, \
+    QCheckBox, QListWidgetItem, QSlider, QStyleOptionSlider, QStyle
+from ManageTags import TagsDialogue
 from session import Session
 
 
@@ -29,6 +29,56 @@ class TreeItem(QTreeWidgetItem):
     def get_note(self):
         return self.note
 
+class Slider(QSlider):
+    def set_ui(self, ui):
+        self.ui = ui
+
+    def mousePressEvent(self, event):
+        super(Slider, self).mousePressEvent(event)
+        if event.button() == QtCore.Qt.LeftButton:
+            val = self.pixelPosToRangeValue(event.pos())
+            self.setValue(val)
+            self.ui.updatePosition(val)
+
+    def pixelPosToRangeValue(self, pos):
+        opt = QStyleOptionSlider()
+        self.initStyleOption(opt)
+        gr = self.style().subControlRect(QStyle.CC_Slider, opt, QStyle.SC_SliderGroove, self)
+        sr = self.style().subControlRect(QStyle.CC_Slider, opt, QStyle.SC_SliderHandle, self)
+
+        if self.orientation() == QtCore.Qt.Horizontal:
+            sliderLength = sr.width()
+            sliderMin = gr.x()
+            sliderMax = gr.right() - sliderLength + 1
+        else:
+            sliderLength = sr.height()
+            sliderMin = gr.y()
+            sliderMax = gr.bottom() - sliderLength + 1;
+        pr = pos - sr.center() + sr.topLeft()
+        p = pr.x() if self.orientation() == QtCore.Qt.Horizontal else pr.y()
+        return QStyle.sliderValueFromPosition(self.minimum(), self.maximum(), p - sliderMin,
+                                               sliderMax - sliderMin, opt.upsideDown)
+
+    def updatePosition(self, v):
+        pass
+
+class CheckBox(QCheckBox):
+    def __init__(self, ui):
+        super().__init__()
+        self.ui = ui
+        self.toggled.connect(self.func)
+
+    def func(self, checked: bool) -> None:
+        if len(self.ui.wgt_notes.selectedItems()) == 0:
+            return
+        node = self.ui.wgt_notes.selectedItems()[0]
+        self.ui.btn_export.setDisabled(False)
+        if checked:
+            node.get_note().add_tag(self.text())
+        else:
+            node.get_note().remove_tag(self.text())
+
+
 
 class dirNotes:
     def __init__(self):
@@ -36,9 +86,10 @@ class dirNotes:
         self.session = Session()
         layout = resource_path("video_1.ui")
         self.save_path = None
+        self.initial_length = 0
         # self.ui = uic.loadUi('video_1.ui')  # Loading the ui program designed by designer
         self.ui = uic.loadUi(layout)
-        self.ui.setFixedSize(1870, 780)
+        self.ui.setFixedSize(1325, 1316)
         # player
         self.player = QMediaPlayer()
         self.player.setVideoOutput(self.ui.wgt_player)
@@ -61,10 +112,17 @@ class dirNotes:
         self.ui.btn_note.setDisabled(True)
         self.ui.btn_save_as.triggered.connect(self.save_as)
         self.ui.btn_save_as.setDisabled(True)
+        self.ui.actionTags.triggered.connect(self.set_up_dialogue)
         # Progress bar
+        self.ui.sld_duration = Slider(self.ui)
+        self.ui.sld_duration.setGeometry(QtCore.QRect(10, 625, 1301, 20))
+        self.ui.sld_duration.setOrientation(QtCore.Qt.Horizontal)
+        self.ui.sld_duration.setObjectName("sld_duration")
         self.player.durationChanged.connect(self.getDuration)
         self.player.positionChanged.connect(self.getPosition)
         self.ui.sld_duration.sliderMoved.connect(self.updatePosition)
+        self.ui.sld_duration.set_ui(self)
+        self.ui.sld_duration.setDisabled(True)
         # Tree
         self.ui.wgt_notes.setHeaderLabels(['Position', 'User', 'Note (Comment)'])
         self.ui.wgt_notes.itemDoubleClicked.connect(self.treeItemClicked)
@@ -74,33 +132,21 @@ class dirNotes:
         self.ui.combo_tag.currentIndexChanged.connect(self.filterTag)
         self.ui.combo_tag.setDisabled(True)
         # checkbox
-        self.ui.general.toggled.connect(lambda c: self.checkBox(c, self.ui.general))
-        self.ui.sound.toggled.connect(lambda c: self.checkBox(c, self.ui.sound))
-        self.ui.music.toggled.connect(lambda c: self.checkBox(c, self.ui.music))
-        self.ui.colour.toggled.connect(lambda c: self.checkBox(c, self.ui.colour))
-        self.ui.vfx.toggled.connect(lambda c: self.checkBox(c, self.ui.vfx))
         self.disableAllCheckbox(True)
+        # dialogue
+        self.tags_dialogue = TagsDialogue()
+        self.tags_dialogue.ui.buttonBox.accepted.connect(self.save_dialogue)
+        # menu
+        self.ui.menuManage.setDisabled(True)
+        self.ui.wgt_notes.setDisabled(True)
 
     # Open video file
     def open(self):
-        # if self.session.is_active():
-        #     message = QMessageBox()
-        #     message.setText('Loading a new video means closing your current notes session.')
-        #     message.setWindowTitle('New Video')
-        #     yes = message.addButton('Save my current notes', QMessageBox.YesRole)
-        #     message.addButton('Discard my current notes', QMessageBox.NoRole)
-        #     cancel = message.addButton("Keep my current video", QMessageBox.RejectRole)
-        #     x = message.exec_()
-        #     if message.clickedButton() == yes:
-        #         self.saveSession()
-        #     elif message.clickedButton() == cancel:
-        #         return
         url = QFileDialog.getOpenFileUrl(self.ui, 'Select A Video',
                                          filter="Video File (*.avi *.mp4 *.mov *.flv *.wmv)")[0]
         if url.fileName():
             self.player.setMedia(QMediaContent(url))
             return url
-
     # Play video
     def playPause(self):
         if self.player.state()==1:
@@ -113,6 +159,7 @@ class dirNotes:
         self.ui.sld_duration.setRange(0, d)
         self.ui.sld_duration.setEnabled(True)
         self.displayTime(d)
+        self.initial_length = d
     # Video real-time location acquisition
     def getPosition(self, p):
         self.ui.sld_duration.setValue(p)
@@ -136,10 +183,13 @@ class dirNotes:
             if okPressed and text != '':
                 self.session = Session()
                 self.session.new_user(text)
-                self.session.set_video_length(self.player.duration())
+                self.session.set_video_length(self.initial_length)
                 self.ui.btn_note.setDisabled(False)
                 self.ui.btn_export.setDisabled(False)
                 self.ui.btn_save_as.setDisabled(False)
+                self.update_list()
+                self.ui.menuManage.setDisabled(False)
+                self.ui.wgt_notes.setDisabled(False)
                 self.set_up_media()
                 return
             elif not okPressed:
@@ -193,8 +243,8 @@ class dirNotes:
 
     def addNote(self):
         self.ui.combo_tag.setCurrentText('All')
-        text, okPressed = QInputDialog.getText(self.ui, "Add a note at position " + str(self.ui.sld_duration.value()),
-                                                "Add a note at position " + str(self.ui.sld_duration.value()))
+        text, okPressed = QInputDialog.getText(self.ui, "Add a note",
+                                                "Add a note at " + self.convert_ms(self.ui.sld_duration.value()))
         if okPressed and text != '':
             self.ui.btn_export.setDisabled(False)
             self.session.write_note(self.ui.sld_duration.value(), text)
@@ -247,17 +297,6 @@ class dirNotes:
             self.ui.btn_edit.setText('Edit')
         QtCore.QCoreApplication.processEvents()
 
-    def checkBox(self, checked, obj):
-        if len(self.ui.wgt_notes.selectedItems()) == 0:
-            obj.setChecked(False)
-            return
-        node = self.ui.wgt_notes.selectedItems()[0]
-        self.ui.btn_export.setDisabled(False)
-        if checked:
-            node.get_note().add_tag(obj.text())
-        else:
-            node.get_note().remove_tag(obj.text())
-
     def filterTag(self):
         if self.ui.combo_tag.currentText() == "All":
             self.session.set_filter(None)
@@ -267,53 +306,58 @@ class dirNotes:
 
     def selectNote(self):
         if len(self.ui.wgt_notes.selectedItems()) == 0:
+            QtCore.QCoreApplication.processEvents()
             self.disableAllCheckbox(True)
             self.ui.btn_del.setDisabled(True)
             self.ui.btn_edit.setDisabled(True)
             self.ui.btn_comment.setDisabled(True)
+            QtCore.QCoreApplication.processEvents()
             return
         node = self.ui.wgt_notes.selectedItems()[0]
         if self.ui.wgt_notes.itemWidget(node, 1).text() != self.session.get_active_username():
+            QtCore.QCoreApplication.processEvents()
             self.ui.btn_del.setDisabled(True)
             self.ui.btn_edit.setDisabled(True)
+            QtCore.QCoreApplication.processEvents()
             if isinstance(node, TreeItem):
+                QtCore.QCoreApplication.processEvents()
                 self.ui.btn_comment.setDisabled(False)
                 self.disableAllCheckbox(False)
+                for i in range(self.ui.tagsList.count()):
+                    QtCore.QCoreApplication.processEvents()
+                    if node.get_note().has_tag(self.ui.tagsList.itemWidget(self.ui.tagsList.item(i)).text()):
+                        self.ui.tagsList.itemWidget(self.ui.tagsList.item(i)).setChecked(True)
+                    else:
+                        self.ui.tagsList.itemWidget(self.ui.tagsList.item(i)).setChecked(False)
+                    QtCore.QCoreApplication.processEvents()
+                QtCore.QCoreApplication.processEvents()
             else:
+                QtCore.QCoreApplication.processEvents()
                 self.ui.btn_comment.setDisabled(True)
                 self.disableAllCheckbox(True)
+                QtCore.QCoreApplication.processEvents()
             return
         if not isinstance(node, TreeItem):
+            QtCore.QCoreApplication.processEvents()
             self.disableAllCheckbox(True)
             self.ui.btn_del.setDisabled(False)
             self.ui.btn_edit.setDisabled(True)
             self.ui.btn_comment.setDisabled(True)
+            QtCore.QCoreApplication.processEvents()
             return
+        QtCore.QCoreApplication.processEvents()
         self.ui.btn_del.setDisabled(False)
         self.ui.btn_edit.setDisabled(False)
         self.ui.btn_comment.setDisabled(False)
         self.disableAllCheckbox(False)
-
-        if node.get_note().has_tag('General'):
-            self.ui.general.setChecked(True)
-        else:
-            self.ui.general.setChecked(False)
-        if node.get_note().has_tag('Sound'):
-            self.ui.sound.setChecked(True)
-        else:
-            self.ui.sound.setChecked(False)
-        if node.get_note().has_tag('Music'):
-            self.ui.music.setChecked(True)
-        else:
-            self.ui.music.setChecked(False)
-        if node.get_note().has_tag('Colour'):
-            self.ui.colour.setChecked(True)
-        else:
-            self.ui.colour.setChecked(False)
-        if node.get_note().has_tag('VFX'):
-            self.ui.vfx.setChecked(True)
-        else:
-            self.ui.vfx.setChecked(False)
+        QtCore.QCoreApplication.processEvents()
+        for i in range(self.ui.tagsList.count()):
+            QtCore.QCoreApplication.processEvents()
+            if node.get_note().has_tag(self.ui.tagsList.itemWidget(self.ui.tagsList.item(i)).text()):
+                self.ui.tagsList.itemWidget(self.ui.tagsList.item(i)).setChecked(True)
+            else:
+                self.ui.tagsList.itemWidget(self.ui.tagsList.item(i)).setChecked(False)
+            QtCore.QCoreApplication.processEvents()
 
     def saveSession(self):
         if not self.save_path:
@@ -333,10 +377,11 @@ class dirNotes:
         if file:
             pickle_in = open(file, "rb")
             curr = pickle.load(pickle_in)
-            if curr.get_video_length() != self.player.duration():
+            if curr.get_video_length() != self.initial_length:
                 msg = QMessageBox()
                 msg.setWindowTitle("Video mismatch")
                 msg.setText("The video associated with these notes don't seem to match the one you loaded.")
+                print(curr.get_video_length(), self.initial_length)
                 x = msg.exec_()
                 return
             all_users = curr.get_all_usernames()
@@ -369,20 +414,21 @@ class dirNotes:
                     curr.set_active(item)
                 self.set_up_media()
                 self.session = curr
+                self.update_combo_box()
                 self.save_path = file
                 self.updateNotes()
                 self.ui.btn_export.setDisabled(True)
                 self.ui.btn_note.setDisabled(False)
                 self.ui.menuSession.setDisabled(False)
+                self.ui.menuManage.setDisabled(False)
                 self.ui.btn_save_as.setDisabled(False)
+                self.ui.wgt_notes.setDisabled(False)
+                self.update_list()
 
     def disableAllCheckbox(self, bool):
-        self.ui.label.setDisabled(bool)
-        self.ui.general.setDisabled(bool)
-        self.ui.sound.setDisabled(bool)
-        self.ui.music.setDisabled(bool)
-        self.ui.colour.setDisabled(bool)
-        self.ui.vfx.setDisabled(bool)
+        self.ui.tagsList.setDisabled(bool)
+        for i in range(self.ui.tagsList.count()):
+            self.ui.tagsList.itemWidget(self.ui.tagsList.item(i)).setDisabled(bool)
 
     def handle_exit(self):
         if not self.session.is_active() or not self.ui.btn_export.isEnabled():
@@ -402,6 +448,7 @@ class dirNotes:
         QtCore.QCoreApplication.processEvents()
         self.ui.menuSession.setDisabled(False)
         self.ui.btn_play_pause.setDisabled(False)
+        self.ui.sld_duration.setDisabled(False)
         self.player.play()
         self.player.pause()
 
@@ -420,6 +467,38 @@ class dirNotes:
         minutes = int(minutes)
         hours = (millis / (1000 * 60 * 60)) % 24
         return "%02d:%02d:%02d" % (hours, minutes, seconds)
+
+    def update_combo_box(self):
+        self.ui.combo_tag.clear()
+        self.ui.combo_tag.addItem('All')
+        for tag in self.session.tags:
+            self.ui.combo_tag.addItem(tag)
+
+    def set_up_dialogue(self):
+        self.tags_dialogue.set_up_list(self.session.tags)
+        self.tags_dialogue.show()
+
+    def save_dialogue(self):
+        deletes = [tag for tag in self.session.tags if tag not in self.tags_dialogue.all_tags()]
+        for lost in deletes:
+            for note in self.session.get_all_notes():
+                note.remove_tag(lost)
+        self.session.tags = self.tags_dialogue.all_tags()
+        self.update_combo_box()
+        self.update_list()
+
+    def update_list(self):
+        self.ui.tagsList.clear()
+        for tag in self.session.tags:
+            item = QListWidgetItem()
+            cb = CheckBox(self.ui)
+            cb.setText(tag)
+            self.ui.tagsList.addItem(item)
+            self.ui.tagsList.setItemWidget(item, cb)
+
+
+
+
 
 if __name__ == "__main__":
     # import sys

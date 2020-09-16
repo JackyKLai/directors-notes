@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1893</width>
-    <height>740</height>
+    <width>1329</width>
+    <height>1308</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -19,16 +19,16 @@
      <rect>
       <x>10</x>
       <y>20</y>
-      <width>811</width>
-      <height>431</height>
+      <width>1301</width>
+      <height>561</height>
      </rect>
     </property>
    </widget>
    <widget class="QPushButton" name="btn_play_pause">
     <property name="geometry">
      <rect>
-      <x>310</x>
-      <y>510</y>
+      <x>510</x>
+      <y>620</y>
       <width>201</width>
       <height>31</height>
      </rect>
@@ -37,24 +37,11 @@
      <string>Play / Pause</string>
     </property>
    </widget>
-   <widget class="QSlider" name="sld_duration">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>470</y>
-      <width>811</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="orientation">
-     <enum>Qt::Horizontal</enum>
-    </property>
-   </widget>
    <widget class="QLabel" name="lab_duration">
     <property name="geometry">
      <rect>
-      <x>706</x>
-      <y>490</y>
+      <x>1200</x>
+      <y>600</y>
       <width>111</width>
       <height>21</height>
      </rect>
@@ -70,7 +57,7 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>510</y>
+      <y>620</y>
       <width>121</width>
       <height>31</height>
      </rect>
@@ -82,10 +69,10 @@
    <widget class="QTreeWidget" name="wgt_notes">
     <property name="geometry">
      <rect>
-      <x>830</x>
-      <y>0</y>
+      <x>10</x>
+      <y>670</y>
       <width>1021</width>
-      <height>531</height>
+      <height>530</height>
      </rect>
     </property>
     <column>
@@ -97,10 +84,10 @@
    <widget class="QPushButton" name="btn_comment">
     <property name="geometry">
      <rect>
-      <x>1190</x>
-      <y>540</y>
+      <x>450</x>
+      <y>1210</y>
       <width>151</width>
-      <height>31</height>
+      <height>30</height>
      </rect>
     </property>
     <property name="text">
@@ -110,10 +97,10 @@
    <widget class="QPushButton" name="btn_del">
     <property name="geometry">
      <rect>
-      <x>1440</x>
-      <y>540</y>
+      <x>700</x>
+      <y>1210</y>
       <width>141</width>
-      <height>31</height>
+      <height>30</height>
      </rect>
     </property>
     <property name="text">
@@ -123,10 +110,10 @@
    <widget class="QPushButton" name="btn_edit">
     <property name="geometry">
      <rect>
-      <x>940</x>
-      <y>540</y>
+      <x>200</x>
+      <y>1210</y>
       <width>141</width>
-      <height>31</height>
+      <height>30</height>
      </rect>
     </property>
     <property name="text">
@@ -136,10 +123,10 @@
    <widget class="QComboBox" name="combo_tag">
     <property name="geometry">
      <rect>
-      <x>1710</x>
-      <y>0</y>
+      <x>890</x>
+      <y>670</y>
       <width>141</width>
-      <height>31</height>
+      <height>30</height>
      </rect>
     </property>
     <property name="currentText">
@@ -150,108 +137,31 @@
       <string>All</string>
      </property>
     </item>
-    <item>
-     <property name="text">
-      <string>General</string>
-     </property>
-    </item>
-    <item>
-     <property name="text">
-      <string>Sound</string>
-     </property>
-    </item>
-    <item>
-     <property name="text">
-      <string>Music</string>
-     </property>
-    </item>
-    <item>
-     <property name="text">
-      <string>Colour</string>
-     </property>
-    </item>
-    <item>
-     <property name="text">
-      <string>VFX</string>
-     </property>
-    </item>
-   </widget>
-   <widget class="QCheckBox" name="general">
-    <property name="geometry">
-     <rect>
-      <x>1020</x>
-      <y>590</y>
-      <width>141</width>
-      <height>31</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>General</string>
-    </property>
-   </widget>
-   <widget class="QCheckBox" name="sound">
-    <property name="geometry">
-     <rect>
-      <x>1250</x>
-      <y>590</y>
-      <width>151</width>
-      <height>31</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Sound</string>
-    </property>
-   </widget>
-   <widget class="QCheckBox" name="music">
-    <property name="geometry">
-     <rect>
-      <x>1500</x>
-      <y>590</y>
-      <width>141</width>
-      <height>31</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Music</string>
-    </property>
-   </widget>
-   <widget class="QCheckBox" name="colour">
-    <property name="geometry">
-     <rect>
-      <x>1250</x>
-      <y>640</y>
-      <width>161</width>
-      <height>31</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Colour</string>
-    </property>
-   </widget>
-   <widget class="QCheckBox" name="vfx">
-    <property name="geometry">
-     <rect>
-      <x>1020</x>
-      <y>640</y>
-      <width>101</width>
-      <height>31</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>VFX</string>
-    </property>
    </widget>
    <widget class="QLabel" name="label">
     <property name="geometry">
      <rect>
-      <x>830</x>
-      <y>590</y>
+      <x>1040</x>
+      <y>670</y>
       <width>191</width>
-      <height>31</height>
+      <height>30</height>
      </rect>
     </property>
     <property name="text">
-     <string>Manage tags:</string>
+     <string>Tags</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+    </property>
+   </widget>
+   <widget class="QListWidget" name="tagsList">
+    <property name="geometry">
+     <rect>
+      <x>1040</x>
+      <y>699</y>
+      <width>271</width>
+      <height>501</height>
+     </rect>
     </property>
    </widget>
   </widget>
@@ -260,7 +170,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1893</width>
+     <width>1329</width>
      <height>21</height>
     </rect>
    </property>
@@ -280,7 +190,14 @@
     <addaction name="btn_export"/>
     <addaction name="btn_save_as"/>
    </widget>
+   <widget class="QMenu" name="menuManage">
+    <property name="title">
+     <string>Manage</string>
+    </property>
+    <addaction name="actionTags"/>
+   </widget>
    <addaction name="menuFile"/>
+   <addaction name="menuManage"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="btn_select">
@@ -321,6 +238,16 @@
   <action name="btn_save_as">
    <property name="text">
     <string>Save as...</string>
+   </property>
+  </action>
+  <action name="actionTags">
+   <property name="text">
+    <string>Tags</string>
+   </property>
+  </action>
+  <action name="clear_all">
+   <property name="text">
+    <string>Clear All Notes</string>
    </property>
   </action>
  </widget>

@@ -9,6 +9,7 @@ class Session:
         self._all_notes = []
         self._active = False
         self._video_length = None
+        self.tags = []
 
     def new_user(self, name):
         all_names = [person.get_name() for person in self._users]
@@ -71,3 +72,9 @@ class Session:
 
     def get_video_length(self):
         return self._video_length
+
+    def get_all_notes(self):
+        all_notes = []
+        for user in self._users:
+            all_notes.extend(user.get_notes())
+        return all_notes
