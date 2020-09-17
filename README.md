@@ -13,13 +13,8 @@ Use the slider and the play-pause button to stop at a frame. You can add a note 
 ### Comments
 You can leave comments on a note by selecting it and clicking on the "Comment" button. Comments can only be left on a note and can't be edited. If you don't like what you've entered, you can delete a comment or a note by selecting it and clicking on the "Delete" button.
 ### Tags and filters
-You can add tags to a note. The available tags are, as you can see at the bottom right of the window:
-* General
-* Sound
-* Music
-* Colour
-* VFX
-
+You can assign tags to a note. You will need to create tags by going to Manage->Tags before assigning them to your notes.
+After defining your tags, they will be available as checkboxes. You will have access to them once you have selected a note.
 Using the drop-down menu at the top right corner, you can filter notes based on the tags you assigned to them.
 ### Exporting and saving
 Go to File -> Save to save changes. If you imported a notes file to begin with, the app will save changes to the file you imported. To save changes as a new notes file, go to File -> Save as...
