@@ -2,6 +2,7 @@ import os
 import pickle
 import sys
 from PyQt5 import uic, QtCore
+from PyQt5.QtCore import QUrl
 from PyQt5.QtMultimedia import QMediaContent, QMediaPlayer
 from PyQt5.QtWidgets import QFileDialog, QApplication, QInputDialog, QMessageBox, QTreeWidgetItem, QLabel, QTextEdit, \
     QCheckBox, QListWidgetItem, QSlider, QStyleOptionSlider, QStyle
@@ -115,7 +116,7 @@ class dirNotes:
         self.ui.actionTags.triggered.connect(self.set_up_dialogue)
         # Progress bar
         self.ui.sld_duration = Slider(self.ui)
-        self.ui.sld_duration.setGeometry(QtCore.QRect(10, 625, 1301, 20))
+        self.ui.sld_duration.setGeometry(QtCore.QRect(10, 585, 1301, 20))
         self.ui.sld_duration.setOrientation(QtCore.Qt.Horizontal)
         self.ui.sld_duration.setObjectName("sld_duration")
         self.player.durationChanged.connect(self.getDuration)
@@ -142,13 +143,33 @@ class dirNotes:
 
     # Open video file
     def open(self):
-        url = QFileDialog.getOpenFileUrl(self.ui, 'Select A Video',
-                                         filter="Video File (*.avi *.mp4 *.mov *.flv *.wmv)")[0]
-        if url.fileName():
+        # url = QFileDialog.getOpenFileUrl(self.ui, 'Select A Video',
+        #                                  filter="Video File (*.avi *.mp4 *.mov *.flv *.wmv)")[0]
+        video, _ = QFileDialog.getOpenFileName(self.ui, "Load Video File", "", "Video File (*.avi *.mp4 *.mov *.flv *.wmvv *.m4v)")
+        url = QUrl.fromLocalFile(video)
+        if video:
+            self.initial_length = 0
             self.player.setMedia(QMediaContent(url))
             return url
     # Play video
     def playPause(self):
+        if not self.player.isVideoAvailable():
+            msg = QMessageBox()
+            msg.setWindowTitle("Unsupported Video")
+            msg.setText("Your video doesn't seem to be supported by the built-in player. "
+                        "Try converting it with a tool like VLC.")
+            x = msg.exec_()
+            self.ui.wgt_notes.clear()
+            self.ui.tagsList.clear()
+            self.ui.wgt_notes.setDisabled(True)
+            self.ui.tagsList.setDisabled(True)
+            self.ui.btn_play_pause.setDisabled(True)
+            self.ui.sld_duration.setDisabled(True)
+            self.ui.btn_note.setDisabled(True)
+            self.ui.btn_save_as.setDisabled(True)
+            self.ui.btn_export.setDisabled(True)
+            self.ui.menuManage.setDisabled(True)
+            return
         if self.player.state()==1:
             self.player.pause()
         else:
@@ -237,6 +258,8 @@ class dirNotes:
         if not isinstance(item, TreeItem):
             return
         v = item.get_note().get_timestamp()
+        if v > self.initial_length:
+            v = self.initial_length
         self.ui.sld_duration.setValue(v)
         self.player.setPosition(v)
         self.player.pause()
@@ -377,7 +400,24 @@ class dirNotes:
         if file:
             pickle_in = open(file, "rb")
             curr = pickle.load(pickle_in)
-            if curr.get_video_length() != self.initial_length:
+            if self.initial_length == 0:
+                msg = QMessageBox()
+                msg.setWindowTitle("Unsupported Video")
+                msg.setText("Your video doesn't seem to be supported by the built-in player. "
+                            "Try converting it with a tool like VLC.")
+                x = msg.exec_()
+                self.ui.wgt_notes.clear()
+                self.ui.tagsList.clear()
+                self.ui.wgt_notes.setDisabled(True)
+                self.ui.tagsList.setDisabled(True)
+                self.ui.btn_play_pause.setDisabled(True)
+                self.ui.sld_duration.setDisabled(True)
+                self.ui.btn_note.setDisabled(True)
+                self.ui.btn_save_as.setDisabled(True)
+                self.ui.btn_export.setDisabled(True)
+                self.ui.menuManage.setDisabled(True)
+                return
+            if abs(curr.get_video_length() - self.initial_length) <= 100:
                 msg = QMessageBox()
                 msg.setWindowTitle("Video mismatch")
                 msg.setText("The video associated with these notes don't seem to match the one you loaded.")
@@ -449,8 +489,8 @@ class dirNotes:
         self.ui.menuSession.setDisabled(False)
         self.ui.btn_play_pause.setDisabled(False)
         self.ui.sld_duration.setDisabled(False)
-        self.player.play()
-        self.player.pause()
+        # self.player.play()
+        # self.player.pause()
 
     def save_as(self):
         self.save_path, _ = QFileDialog.getSaveFileName(self.ui, "Save output as...", "", "Data File (*.pkl)")
