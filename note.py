@@ -6,6 +6,7 @@ class Note:
         self._tags = []
         self._fixed = False
         self._author = author_name
+        self.attachments = []
 
     def get_author(self):
         return self._author

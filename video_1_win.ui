@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1109</width>
-    <height>961</height>
+    <width>1327</width>
+    <height>1264</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -19,16 +19,16 @@
      <rect>
       <x>10</x>
       <y>20</y>
-      <width>1081</width>
-      <height>471</height>
+      <width>1301</width>
+      <height>561</height>
      </rect>
     </property>
    </widget>
    <widget class="QPushButton" name="btn_play_pause">
     <property name="geometry">
      <rect>
-      <x>480</x>
-      <y>520</y>
+      <x>510</x>
+      <y>620</y>
       <width>201</width>
       <height>31</height>
      </rect>
@@ -40,8 +40,8 @@
    <widget class="QLabel" name="lab_duration">
     <property name="geometry">
      <rect>
-      <x>980</x>
-      <y>510</y>
+      <x>1200</x>
+      <y>600</y>
       <width>111</width>
       <height>21</height>
      </rect>
@@ -57,7 +57,7 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>520</y>
+      <y>620</y>
       <width>121</width>
       <height>31</height>
      </rect>
@@ -66,14 +66,35 @@
      <string>Add Note</string>
     </property>
    </widget>
+   <widget class="QTreeWidget" name="wgt_notes">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>670</y>
+      <width>1021</width>
+      <height>530</height>
+     </rect>
+    </property>
+    <column>
+     <property name="text">
+      <string notr="true">1</string>
+     </property>
+    </column>
+   </widget>
    <widget class="QComboBox" name="combo_tag">
     <property name="geometry">
      <rect>
-      <x>720</x>
-      <y>570</y>
+      <x>890</x>
+      <y>670</y>
       <width>141</width>
       <height>30</height>
      </rect>
+    </property>
+    <property name="sizePolicy">
+     <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+      <horstretch>0</horstretch>
+      <verstretch>0</verstretch>
+     </sizepolicy>
     </property>
     <property name="currentText">
      <string>All</string>
@@ -87,8 +108,8 @@
    <widget class="QLabel" name="label">
     <property name="geometry">
      <rect>
-      <x>870</x>
-      <y>570</y>
+      <x>1040</x>
+      <y>670</y>
       <width>191</width>
       <height>30</height>
      </rect>
@@ -100,46 +121,23 @@
      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
     </property>
    </widget>
-   <widget class="QTreeWidget" name="wgt_notes">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>570</y>
-      <width>851</width>
-      <height>301</height>
-     </rect>
-    </property>
-    <column>
-     <property name="text">
-      <string notr="true">1</string>
-     </property>
-    </column>
-   </widget>
    <widget class="QListWidget" name="tagsList">
     <property name="geometry">
      <rect>
-      <x>870</x>
-      <y>590</y>
-      <width>221</width>
-      <height>281</height>
+      <x>1040</x>
+      <y>699</y>
+      <width>271</width>
+      <height>501</height>
      </rect>
     </property>
    </widget>
-   <zorder>wgt_player</zorder>
-   <zorder>btn_play_pause</zorder>
-   <zorder>lab_duration</zorder>
-   <zorder>btn_note</zorder>
-   <zorder>label</zorder>
-   <zorder>wgt_notes</zorder>
-   <zorder>tagsList</zorder>
-   <zorder>combo_tag</zorder>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1109</width>
+     <width>1327</width>
      <height>21</height>
     </rect>
    </property>

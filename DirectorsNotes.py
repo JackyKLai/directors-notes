@@ -1,13 +1,15 @@
+import base64
 import os
 import pickle
-from PyQt5 import uic, QtCore
-from PyQt5.QtCore import QUrl
+from PyQt5 import uic, QtCore, QtGui
+from PyQt5.QtCore import QUrl, Qt
+from PyQt5.QtGui import QKeySequence
 from PyQt5.QtMultimedia import QMediaContent, QMediaPlayer
 from PyQt5.QtWidgets import QFileDialog, QApplication, QInputDialog, QMessageBox, QTreeWidgetItem, QLabel, QTextEdit, \
-    QCheckBox, QListWidgetItem, QSlider, QStyleOptionSlider, QStyle
+    QCheckBox, QListWidgetItem, QSlider, QStyleOptionSlider, QStyle, QShortcut, QMenu
 from ManageTags import TagsDialogue
 from session import Session
-
+from Image import ImageDialogue
 
 # Define function to import external files when using PyInstaller.
 def resource_path(relative_path):
@@ -84,12 +86,11 @@ class dirNotes:
     def __init__(self):
         # Initialization
         self.session = Session()
-        layout = resource_path("video_1.ui")
+        self.ui_mode('Win')
         self.save_path = None
         self.initial_length = 0
+        self.note_editing = False
         # self.ui = uic.loadUi('video_1.ui')  # Loading the ui program designed by designer
-        self.ui = uic.loadUi(layout)
-        self.ui.setFixedSize(1106, 956)
         # player
         self.player = QMediaPlayer()
         self.player.setVideoOutput(self.ui.wgt_player)
@@ -97,16 +98,10 @@ class dirNotes:
         self.ui.btn_play_pause.clicked.connect(self.playPause)
         self.ui.new_sess.triggered.connect(self.newSession)
         self.ui.btn_note.clicked.connect(self.addNote)
-        self.ui.btn_comment.clicked.connect(self.addComment)
-        self.ui.btn_del.clicked.connect(self.delNote)
-        self.ui.btn_edit.clicked.connect(self.editNote)
         self.ui.btn_export.triggered.connect(self.saveSession)
         self.ui.load_sess.triggered.connect(self.loadSession)
         self.ui.menuSession.setDisabled(False)
         self.ui.btn_export.setDisabled(True)
-        self.ui.btn_del.setDisabled(True)
-        self.ui.btn_edit.setDisabled(True)
-        self.ui.btn_comment.setDisabled(True)
         self.ui.btn_note.setDisabled(True)
         self.ui.btn_play_pause.setDisabled(True)
         self.ui.btn_note.setDisabled(True)
@@ -114,8 +109,6 @@ class dirNotes:
         self.ui.btn_save_as.setDisabled(True)
         self.ui.actionTags.triggered.connect(self.set_up_dialogue)
         # Progress bar
-        self.ui.sld_duration = Slider(self.ui)
-        self.ui.sld_duration.setGeometry(QtCore.QRect(10, 490, 1081, 29))
         self.ui.sld_duration.setOrientation(QtCore.Qt.Horizontal)
         self.ui.sld_duration.setObjectName("sld_duration")
         self.player.durationChanged.connect(self.getDuration)
@@ -139,6 +132,28 @@ class dirNotes:
         # menu
         self.ui.menuManage.setDisabled(True)
         self.ui.wgt_notes.setDisabled(True)
+        self.ui.wgt_notes.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.ui.wgt_notes.customContextMenuRequested.connect(self.contextMenu)
+        # shortcuts
+        self.save = QShortcut(QKeySequence('Ctrl+S'), self.ui)
+        self.save.activated.connect(self.saveSession)
+        self.saveAs = QShortcut(QKeySequence('Ctrl+A'), self.ui)
+        self.saveAs.activated.connect(self.save_as)
+
+    def ui_mode(self, system):
+        if system == 'Win':
+            layout = resource_path("video_1_win.ui")
+            self.ui = uic.loadUi(layout)
+            self.ui.setFixedSize(1325, 1290)
+            self.ui.sld_duration = Slider(self.ui)
+            self.ui.sld_duration.setGeometry(QtCore.QRect(10, 625, 1301, 20))
+            self.ui.setWindowIcon(QtGui.QIcon("icon.ico"))
+        else:
+            layout = resource_path("video_1.ui")
+            self.ui = uic.loadUi(layout)
+            self.ui.setFixedSize(1106, 956)
+            self.ui.sld_duration = Slider(self.ui)
+            self.ui.sld_duration.setGeometry(QtCore.QRect(10, 490, 1081, 29))
 
     # Open video file
     def open(self):
@@ -147,7 +162,6 @@ class dirNotes:
         video, _ = QFileDialog.getOpenFileName(self.ui, "Load Video File", "", "Video File (*.avi *.mp4 *.mov *.flv *.wmvv *.m4v)")
         url = QUrl.fromLocalFile(video)
         if video:
-            self.initial_length = 0
             self.player.setMedia(QMediaContent(url))
             return url
     # Play video
@@ -248,6 +262,8 @@ class dirNotes:
                 text.setText(note.get_text())
                 text.setReadOnly(True)
                 text.setStyleSheet("background-color: rgb(236, 240, 241);")
+                text.setContextMenuPolicy(Qt.CustomContextMenu)
+                text.customContextMenuRequested.connect(self.menu_edit)
                 text.setFixedHeight(80)
                 time = QLabel(str(self.convert_ms(note.get_timestamp())))
                 time.setWordWrap(True)
@@ -284,6 +300,12 @@ class dirNotes:
         self.player.pause()
 
     def addNote(self):
+        if self.note_editing:
+            msg = QMessageBox()
+            msg.setWindowTitle("Editing In Progress")
+            msg.setText("Save changes to the note you are editing before adding a new note.")
+            x = msg.exec_()
+            return
         self.ui.combo_tag.setCurrentText('All')
         text, okPressed = QInputDialog.getText(self.ui, "Add a note",
                                                 "Add a note at " + self.convert_ms(self.ui.sld_duration.value()))
@@ -295,6 +317,12 @@ class dirNotes:
             QtCore.QCoreApplication.processEvents()
 
     def addComment(self):
+        if self.note_editing:
+            msg = QMessageBox()
+            msg.setWindowTitle("Editing In Progress")
+            msg.setText("Please save changes to the note you're editing.")
+            x = msg.exec_()
+            return
         if len(self.ui.wgt_notes.selectedItems()) == 0:
             return
         node = self.ui.wgt_notes.selectedItems()[0]
@@ -309,6 +337,12 @@ class dirNotes:
             self.updateNotes()
 
     def delNote(self):
+        if self.note_editing:
+            msg = QMessageBox()
+            msg.setWindowTitle("Editing In Progress")
+            msg.setText("Please save changes to the note you're editing.")
+            x = msg.exec_()
+            return
         if len(self.ui.wgt_notes.selectedItems()) == 0:
             return 
         node = self.ui.wgt_notes.selectedItems()[0]
@@ -329,22 +363,28 @@ class dirNotes:
         node = self.ui.wgt_notes.selectedItems()[0]
         if not isinstance(node, TreeItem):
             return
-        if self.ui.btn_edit.text() == 'Edit':
+        if self.note_editing is False:
             QtCore.QCoreApplication.processEvents()
             self.ui.wgt_notes.itemWidget(node, 2).setStyleSheet("background-color: rgb(255,255,255)")
-            self.ui.btn_edit.setText('Save')
+            self.note_editing = True
             self.ui.wgt_notes.itemWidget(node, 2).setReadOnly(False)
         else:
             QtCore.QCoreApplication.processEvents()
             self.ui.wgt_notes.itemWidget(node, 2).setReadOnly(True)
+            self.note_editing = False
             node.get_note().edit_text(self.ui.wgt_notes.itemWidget(node, 2).toPlainText())
             # self.ui.btn_export.setDisabled(False)
             self.disable(self.ui.btn_export, False)
             self.ui.wgt_notes.itemWidget(node, 2).setStyleSheet("background-color: rgb(236, 240, 241)")
-            self.ui.btn_edit.setText('Edit')
         QtCore.QCoreApplication.processEvents()
 
     def filterTag(self):
+        if self.note_editing:
+            msg = QMessageBox()
+            msg.setWindowTitle("Editing In Progress")
+            msg.setText("Please save changes to the note you're editing.")
+            x = msg.exec_()
+            return
         QtCore.QCoreApplication.processEvents()
         if self.ui.combo_tag.currentText() == "All":
             self.session.set_filter(None)
@@ -356,25 +396,13 @@ class dirNotes:
     def selectNote(self):
         if len(self.ui.wgt_notes.selectedItems()) == 0:
             self.disableAllCheckbox(True)
-            # self.ui.btn_del.setDisabled(True)
-            # self.ui.btn_edit.setDisabled(True)
-            # self.ui.btn_comment.setDisabled(True)
-            self.disable(self.ui.btn_del, True)
-            self.disable(self.ui.btn_edit, True)
-            self.disable(self.ui.btn_comment, True)
             return
         node = self.ui.wgt_notes.selectedItems()[0]
         if self.ui.wgt_notes.itemWidget(node, 1).text() != self.session.get_active_username():
-            # self.ui.btn_del.setDisabled(True)
-            # self.ui.btn_edit.setDisabled(True)
             QtCore.QCoreApplication.processEvents()
-            self.disable(self.ui.btn_del, True)
-            self.disable(self.ui.btn_edit, True)
             if isinstance(node, TreeItem):
                 QtCore.QCoreApplication.processEvents()
                 self.disableAllCheckbox(False)
-                # self.ui.btn_comment.setDisabled(False)
-                self.disable(self.ui.btn_comment, False)
                 for i in range(self.ui.tagsList.count()):
                     if node.get_note().has_tag(self.ui.tagsList.itemWidget(self.ui.tagsList.item(i)).text()):
                         self.ui.tagsList.itemWidget(self.ui.tagsList.item(i)).setChecked(True)
@@ -384,27 +412,13 @@ class dirNotes:
                 QtCore.QCoreApplication.processEvents()
             else:
                 QtCore.QCoreApplication.processEvents()
-                # self.ui.btn_comment.setDisabled(True)
-                self.disable(self.ui.btn_comment, True)
                 self.disableAllCheckbox(True)
             return
         if not isinstance(node, TreeItem):
             QtCore.QCoreApplication.processEvents()
             self.disableAllCheckbox(True)
-            # self.ui.btn_del.setDisabled(False)
-            # self.ui.btn_edit.setDisabled(True)
-            # self.ui.btn_comment.setDisabled(True)
-            self.disable(self.ui.btn_del, False)
-            self.disable(self.ui.btn_edit, True)
-            self.disable(self.ui.btn_comment, True)
             return
-        # self.ui.btn_del.setDisabled(False)
-        # self.ui.btn_edit.setDisabled(False)
-        # self.ui.btn_comment.setDisabled(False)
         QtCore.QCoreApplication.processEvents()
-        self.disable(self.ui.btn_del, False)
-        self.disable(self.ui.btn_edit, False)
-        self.disable(self.ui.btn_comment, False)
         self.disableAllCheckbox(False)
         for i in range(self.ui.tagsList.count()):
             if node.get_note().has_tag(self.ui.tagsList.itemWidget(self.ui.tagsList.item(i)).text()):
@@ -417,6 +431,7 @@ class dirNotes:
         if not self.save_path:
             self.save_path, _ = QFileDialog.getSaveFileName(self.ui, "Save output as...", "", "Data File (*.pkl)")
         if self.save_path:
+            self.session.set_video_length(self.player.duration())
             file = open(self.save_path, "wb")
             pickle.dump(self.session, file)
             file.close()
@@ -461,6 +476,13 @@ class dirNotes:
                 msg = QMessageBox()
                 msg.setWindowTitle("Video mismatch")
                 msg.setText("The video associated with these notes don't seem to match the one you loaded.")
+                self.player.setMedia(QMediaContent())
+                self.disable(self.ui.btn_play_pause, True)
+                self.disable(self.ui.menuManage, True)
+                self.disable(self.ui.tagsList, True)
+                self.disable(self.ui.btn_note, True)
+                self.session = Session()
+                self.updateNotes()
                 x = msg.exec_()
                 return
             all_users = curr.get_all_usernames()
@@ -525,6 +547,7 @@ class dirNotes:
         message.setWindowTitle('Save')
         yes = message.addButton('Yes', QMessageBox.YesRole)
         message.addButton('No', QMessageBox.NoRole)
+        message.setDefaultButton(yes)
         x = message.exec_()
         if message.clickedButton() == yes:
             self.saveSession()
@@ -541,6 +564,7 @@ class dirNotes:
     def save_as(self):
         self.save_path, _ = QFileDialog.getSaveFileName(self.ui, "Save output as...", "", "Data File (*.pkl)")
         if self.save_path:
+            self.session.set_video_length(self.player.duration())
             file = open(self.save_path, "wb")
             pickle.dump(self.session, file)
             file.close()
@@ -588,6 +612,76 @@ class dirNotes:
         QtCore.QCoreApplication.processEvents()
         obj.setDisabled(bool)
         QtCore.QCoreApplication.processEvents()
+
+    def contextMenu(self, event):
+        if len(self.ui.wgt_notes.selectedItems()) == 0:
+            return
+        node = self.ui.wgt_notes.selectedItems()[0]
+        active_user = (self.ui.wgt_notes.itemWidget(node, 1).text() == self.session.get_active_username())
+        is_note = isinstance(node, TreeItem)
+        menu = QMenu(self.ui)
+        if active_user:
+            delete = menu.addAction('Delete')
+            delete.triggered.connect(self.delNote)
+        if is_note:
+            attach = menu.addAction('Attach Images')
+            attach.triggered.connect(self.attach_images)
+            if len(node.get_note().attachments) > 0:
+                show = menu.addAction('Show Attachments')
+                show.triggered.connect(self.show_attachments)
+            comment = menu.addAction('Comment')
+            comment.triggered.connect(self.addComment)
+        menu.popup(QtGui.QCursor.pos())
+
+    def menu_edit(self, event):
+        if len(self.ui.wgt_notes.selectedItems()) == 0:
+            return
+        node = self.ui.wgt_notes.selectedItems()[0]
+        active_user = (self.ui.wgt_notes.itemWidget(node, 1).text() == self.session.get_active_username())
+        is_note = isinstance(node, TreeItem)
+        menu = QMenu(self.ui)
+        if active_user and is_note:
+            if self.note_editing:
+                save = menu.addAction('Save')
+                save.triggered.connect(self.editNote)
+            else:
+                edit = menu.addAction('Edit')
+                edit.triggered.connect(self.editNote)
+        menu.popup(QtGui.QCursor.pos())
+
+
+    def attach_images(self):
+        if self.note_editing:
+            msg = QMessageBox()
+            msg.setWindowTitle("Editing In Progress")
+            msg.setText("Please save changes to the note you're editing.")
+            x = msg.exec_()
+            return
+        if len(self.ui.wgt_notes.selectedItems()) == 0:
+            return
+        node = self.ui.wgt_notes.selectedItems()[0]
+        files, _ = QFileDialog.getOpenFileNames(self.ui, "Select Images", filter="Image Files (*.jpg *.png)")
+        files = list(files)
+        attachments = []
+        for file in files:
+            with open(file, 'rb') as imageFile:
+                string = base64.b64encode(imageFile.read())
+                format = file[-3:]
+                attachments.append((string, format.upper()))
+        node.get_note().attachments.extend(attachments)
+
+    def show_attachments(self):
+        if self.note_editing:
+            msg = QMessageBox()
+            msg.setWindowTitle("Editing In Progress")
+            msg.setText("Please save changes to the note you're editing.")
+            x = msg.exec_()
+            return
+        if len(self.ui.wgt_notes.selectedItems()) == 0:
+            return
+        node = self.ui.wgt_notes.selectedItems()[0]
+        self.imagedialog = ImageDialogue(node.get_note().attachments)
+        self.imagedialog.show()
 
 
 if __name__ == "__main__":
