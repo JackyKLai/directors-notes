@@ -86,7 +86,7 @@ class dirNotes:
     def __init__(self):
         # Initialization
         self.session = Session()
-        self.ui_mode('Win')
+        self.ui_mode('Mac')
         self.save_path = None
         self.initial_length = 0
         self.note_editing = False
@@ -472,10 +472,11 @@ class dirNotes:
                 self.disable(self.ui.btn_export, True)
                 self.disable(self.ui.menuManage, True)
                 return
-            if abs(curr.get_video_length() - self.initial_length) > 100:
+            if abs(curr.get_video_length() - self.initial_length) > 500:
                 msg = QMessageBox()
                 msg.setWindowTitle("Video mismatch")
                 msg.setText("The video associated with these notes don't seem to match the one you loaded.")
+                print(curr.get_video_length(), self.initial_length)
                 self.player.setMedia(QMediaContent())
                 self.disable(self.ui.btn_play_pause, True)
                 self.disable(self.ui.menuManage, True)

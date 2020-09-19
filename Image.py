@@ -43,26 +43,37 @@ class ImageDialogue:
         byteArr = QtCore.QByteArray.fromBase64(string)
         image.loadFromData(byteArr, format)
         pixmap = QPixmap.fromImage(image)
+        QtCore.QCoreApplication.processEvents()
         self.ui.photo.setPixmap(pixmap.scaled(self.ui.photo.width(), self.ui.photo.height(), Qt.KeepAspectRatio))
+        QtCore.QCoreApplication.processEvents()
+
 
     def prev(self):
+        QtCore.QCoreApplication.processEvents()
         if self.current_index - 1 < 0:
             return
         self.current_index -= 1
         self.decide_buttons()
         self.display()
+        QtCore.QCoreApplication.processEvents()
+
 
     def nex(self):
+        QtCore.QCoreApplication.processEvents()
         if self.current_index + 1 > len(self.image_list) - 1:
             return
         self.current_index += 1
         self.decide_buttons()
         self.display()
+        QtCore.QCoreApplication.processEvents()
 
     def delete(self):
+        QtCore.QCoreApplication.processEvents()
         self.image_list.pop(self.current_index)
         if len(self.image_list) == 0:
+            QtCore.QCoreApplication.processEvents()
             self.ui.photo.setPixmap(QPixmap())
+            QtCore.QCoreApplication.processEvents()
             self.decide_buttons()
             return
         if self.current_index == 0:
@@ -70,13 +81,18 @@ class ImageDialogue:
             self.display()
             return
         self.current_index -= 1
+        QtCore.QCoreApplication.processEvents()
         self.prev()
+        QtCore.QCoreApplication.processEvents()
+
 
     def decide_buttons(self):
+        QtCore.QCoreApplication.processEvents()
         if len(self.image_list) == 0:
             self.ui.delBtn.setDisabled(True)
             self.ui.next.setDisabled(True)
             self.ui.previous.setDisabled(True)
+            QtCore.QCoreApplication.processEvents()
             return
         else:
             self.ui.delBtn.setDisabled(False)
@@ -88,5 +104,7 @@ class ImageDialogue:
             self.ui.next.setDisabled(True)
         else:
             self.ui.next.setDisabled(False)
+        QtCore.QCoreApplication.processEvents()
+
 
 
