@@ -86,7 +86,7 @@ class dirNotes:
     def __init__(self):
         # Initialization
         self.session = Session()
-        self.ui_mode('Mac')
+        self.ui_mode('Win')
         self.save_path = None
         self.initial_length = 0
         self.note_editing = False
@@ -598,6 +598,7 @@ class dirNotes:
         self.session.tags = self.tags_dialogue.all_tags()
         self.update_combo_box()
         self.update_list()
+        self.disable(self.ui.btn_export, False)
 
     def update_list(self):
         self.ui.tagsList.clear()
@@ -670,6 +671,7 @@ class dirNotes:
                 format = file[-3:]
                 attachments.append((string, format.upper()))
         node.get_note().attachments.extend(attachments)
+        self.disable(self.ui.btn_export, False)
 
     def show_attachments(self):
         if self.note_editing:
@@ -683,6 +685,7 @@ class dirNotes:
         node = self.ui.wgt_notes.selectedItems()[0]
         self.imagedialog = ImageDialogue(node.get_note().attachments)
         self.imagedialog.show()
+        self.disable(self.ui.btn_export, False)
 
 
 if __name__ == "__main__":
