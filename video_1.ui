@@ -159,14 +159,7 @@
     <addaction name="btn_export"/>
     <addaction name="btn_save_as"/>
    </widget>
-   <widget class="QMenu" name="menuManage">
-    <property name="title">
-     <string>Manage</string>
-    </property>
-    <addaction name="actionTags"/>
-   </widget>
    <addaction name="menuFile"/>
-   <addaction name="menuManage"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="btn_select">

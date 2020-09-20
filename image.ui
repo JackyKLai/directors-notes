@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Manage Tags</string>
+   <string>Attachments</string>
   </property>
   <widget class="QLabel" name="photo">
    <property name="geometry">
@@ -63,6 +63,22 @@
    </property>
    <property name="text">
     <string>Delete</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_index">
+   <property name="geometry">
+    <rect>
+     <x>270</x>
+     <y>480</y>
+     <width>101</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Index: 1</string>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignCenter</set>
    </property>
   </widget>
  </widget>

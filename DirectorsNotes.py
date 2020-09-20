@@ -7,7 +7,6 @@ from PyQt5.QtGui import QKeySequence
 from PyQt5.QtMultimedia import QMediaContent, QMediaPlayer
 from PyQt5.QtWidgets import QFileDialog, QApplication, QInputDialog, QMessageBox, QTreeWidgetItem, QLabel, QTextEdit, \
     QCheckBox, QListWidgetItem, QSlider, QStyleOptionSlider, QStyle, QShortcut, QMenu
-from ManageTags import TagsDialogue
 from session import Session
 from Image import ImageDialogue
 
@@ -72,8 +71,12 @@ class CheckBox(QCheckBox):
 
     def func(self, checked: bool) -> None:
         if len(self.ui.wgt_notes.selectedItems()) == 0:
+            self.setChecked(False)
             return
         node = self.ui.wgt_notes.selectedItems()[0]
+        if not isinstance(node, TreeItem):
+            self.setChecked(False)
+            return
         self.ui.btn_export.setDisabled(False)
         if checked:
             node.get_note().add_tag(self.text())
@@ -107,7 +110,6 @@ class dirNotes:
         self.ui.btn_note.setDisabled(True)
         self.ui.btn_save_as.triggered.connect(self.save_as)
         self.ui.btn_save_as.setDisabled(True)
-        self.ui.actionTags.triggered.connect(self.set_up_dialogue)
         # Progress bar
         self.ui.sld_duration.setOrientation(QtCore.Qt.Horizontal)
         self.ui.sld_duration.setObjectName("sld_duration")
@@ -125,15 +127,13 @@ class dirNotes:
         self.ui.combo_tag.currentIndexChanged.connect(self.filterTag)
         self.ui.combo_tag.setDisabled(True)
         # checkbox
-        self.disableAllCheckbox(True)
         # dialogue
-        self.tags_dialogue = TagsDialogue()
-        self.tags_dialogue.ui.buttonBox.accepted.connect(self.save_dialogue)
         # menu
-        self.ui.menuManage.setDisabled(True)
         self.ui.wgt_notes.setDisabled(True)
         self.ui.wgt_notes.setContextMenuPolicy(Qt.CustomContextMenu)
         self.ui.wgt_notes.customContextMenuRequested.connect(self.contextMenu)
+        self.ui.tagsList.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.ui.tagsList.customContextMenuRequested.connect(self.menu_tag_list)
         # shortcuts
         self.save = QShortcut(QKeySequence('Ctrl+S'), self.ui)
         self.save.activated.connect(self.saveSession)
@@ -181,7 +181,6 @@ class dirNotes:
             # self.ui.btn_note.setDisabled(True)
             # self.ui.btn_save_as.setDisabled(True)
             # self.ui.btn_export.setDisabled(True)
-            # self.ui.menuManage.setDisabled(True)
             self.disable(self.ui.wgt_notes, True)
             self.disable(self.ui.tagsList, True)
             self.disable(self.ui.btn_play_pause, True)
@@ -189,7 +188,6 @@ class dirNotes:
             self.disable(self.ui.btn_note, True)
             self.disable(self.ui.btn_save_as, True)
             self.disable(self.ui.btn_export, True)
-            self.disable(self.ui.menuManage, True)
             QtCore.QCoreApplication.processEvents()
             return
         if self.player.state()==1:
@@ -234,9 +232,7 @@ class dirNotes:
                 self.disable(self.ui.btn_export, False)
                 self.disable(self.ui.btn_save_as, False)
                 self.update_list()
-                # self.ui.menuManage.setDisabled(False)
                 # self.ui.wgt_notes.setDisabled(False)
-                self.disable(self.ui.menuManage, False)
                 self.disable(self.ui.wgt_notes, False)
                 self.set_up_media()
                 return
@@ -395,14 +391,12 @@ class dirNotes:
 
     def selectNote(self):
         if len(self.ui.wgt_notes.selectedItems()) == 0:
-            self.disableAllCheckbox(True)
             return
         node = self.ui.wgt_notes.selectedItems()[0]
         if self.ui.wgt_notes.itemWidget(node, 1).text() != self.session.get_active_username():
             QtCore.QCoreApplication.processEvents()
             if isinstance(node, TreeItem):
                 QtCore.QCoreApplication.processEvents()
-                self.disableAllCheckbox(False)
                 for i in range(self.ui.tagsList.count()):
                     if node.get_note().has_tag(self.ui.tagsList.itemWidget(self.ui.tagsList.item(i)).text()):
                         self.ui.tagsList.itemWidget(self.ui.tagsList.item(i)).setChecked(True)
@@ -412,14 +406,11 @@ class dirNotes:
                 QtCore.QCoreApplication.processEvents()
             else:
                 QtCore.QCoreApplication.processEvents()
-                self.disableAllCheckbox(True)
             return
         if not isinstance(node, TreeItem):
             QtCore.QCoreApplication.processEvents()
-            self.disableAllCheckbox(True)
             return
         QtCore.QCoreApplication.processEvents()
-        self.disableAllCheckbox(False)
         for i in range(self.ui.tagsList.count()):
             if node.get_note().has_tag(self.ui.tagsList.itemWidget(self.ui.tagsList.item(i)).text()):
                 self.ui.tagsList.itemWidget(self.ui.tagsList.item(i)).setChecked(True)
@@ -462,15 +453,13 @@ class dirNotes:
                 # self.ui.btn_note.setDisabled(True)
                 # self.ui.btn_save_as.setDisabled(True)
                 # self.ui.btn_export.setDisabled(True)
-                # self.ui.menuManage.setDisabled(True)
                 self.disable(self.ui.wgt_notes, True)
-                self.disable(self.ui.tagsList, True)
+                self.disable(self.ui.tagsList, False)
                 self.disable(self.ui.btn_play_pause, True)
                 self.disable(self.ui.sld_duration, True)
                 self.disable(self.ui.btn_note, True)
                 self.disable(self.ui.btn_save_as, True)
                 self.disable(self.ui.btn_export, True)
-                self.disable(self.ui.menuManage, True)
                 return
             if abs(curr.get_video_length() - self.initial_length) > 500:
                 msg = QMessageBox()
@@ -479,7 +468,6 @@ class dirNotes:
                 print(curr.get_video_length(), self.initial_length)
                 self.player.setMedia(QMediaContent())
                 self.disable(self.ui.btn_play_pause, True)
-                self.disable(self.ui.menuManage, True)
                 self.disable(self.ui.tagsList, True)
                 self.disable(self.ui.btn_note, True)
                 self.session = Session()
@@ -516,28 +504,26 @@ class dirNotes:
                     curr.set_active(item)
                 self.set_up_media()
                 self.session = curr
-                self.update_combo_box()
                 self.save_path = file
                 self.updateNotes()
                 # self.ui.btn_export.setDisabled(True)
                 # self.ui.btn_note.setDisabled(False)
                 # self.ui.menuSession.setDisabled(False)
-                # self.ui.menuManage.setDisabled(False)
                 # self.ui.btn_save_as.setDisabled(False)
                 # self.ui.wgt_notes.setDisabled(False)
                 self.disable(self.ui.btn_export, True)
                 self.disable(self.ui.btn_note, False)
                 self.disable(self.ui.menuSession, False)
-                self.disable(self.ui.menuManage, False)
                 self.disable(self.ui.btn_save_as, False)
                 self.disable(self.ui.wgt_notes, False)
+                self.disable(self.ui.tagsList, False)
                 self.update_list()
 
-    def disableAllCheckbox(self, bool):
-        self.ui.tagsList.setDisabled(bool)
-        for i in range(self.ui.tagsList.count()):
-            self.ui.tagsList.itemWidget(self.ui.tagsList.item(i)).setDisabled(bool)
-        QtCore.QCoreApplication.processEvents()
+    # def disableAllCheckbox(self, bool):
+    #     self.ui.tagsList.setDisabled(bool)
+    #     for i in range(self.ui.tagsList.count()):
+    #         self.ui.tagsList.itemWidget(self.ui.tagsList.item(i)).setDisabled(bool)
+    #     QtCore.QCoreApplication.processEvents()
 
 
     def handle_exit(self):
@@ -559,8 +545,8 @@ class dirNotes:
         self.ui.btn_play_pause.setDisabled(False)
         self.ui.sld_duration.setDisabled(False)
         QtCore.QCoreApplication.processEvents()
-        # self.player.play()
-        # self.player.pause()
+        self.player.play()
+        self.player.pause()
 
     def save_as(self):
         self.save_path, _ = QFileDialog.getSaveFileName(self.ui, "Save output as...", "", "Data File (*.pkl)")
@@ -579,27 +565,12 @@ class dirNotes:
         hours = (millis / (1000 * 60 * 60)) % 24
         return "%02d:%02d:%02d" % (hours, minutes, seconds)
 
-    def update_combo_box(self):
-        self.ui.combo_tag.clear()
-        self.ui.combo_tag.addItem('All')
-        for tag in self.session.tags:
-            self.ui.combo_tag.addItem(tag)
-        QtCore.QCoreApplication.processEvents()
-
-    def set_up_dialogue(self):
-        self.tags_dialogue.set_up_list(self.session.tags)
-        self.tags_dialogue.show()
-
-    def save_dialogue(self):
-        deletes = [tag for tag in self.session.tags if tag not in self.tags_dialogue.all_tags()]
-        for lost in deletes:
-            for note in self.session.get_all_notes():
-                note.remove_tag(lost)
-        self.session.tags = self.tags_dialogue.all_tags()
-        self.update_combo_box()
-        self.update_list()
-        self.disable(self.ui.btn_export, False)
-
+    # def update_combo_box(self):
+    #     self.ui.combo_tag.clear()
+    #     self.ui.combo_tag.addItem('All')
+    #     for tag in self.session.tags:
+    #         self.ui.combo_tag.addItem(tag)
+    #     QtCore.QCoreApplication.processEvents()
     def update_list(self):
         self.ui.tagsList.clear()
         for tag in self.session.tags:
@@ -608,6 +579,11 @@ class dirNotes:
             cb.setText(tag)
             self.ui.tagsList.addItem(item)
             self.ui.tagsList.setItemWidget(item, cb)
+        QtCore.QCoreApplication.processEvents()
+        self.ui.combo_tag.clear()
+        self.ui.combo_tag.addItem('All')
+        for tag in self.session.tags:
+            self.ui.combo_tag.addItem(tag)
         QtCore.QCoreApplication.processEvents()
 
     def disable(self, obj, bool):
@@ -686,6 +662,37 @@ class dirNotes:
         self.imagedialog = ImageDialogue(node.get_note().attachments)
         self.imagedialog.show()
         self.disable(self.ui.btn_export, False)
+
+    def menu_tag_list(self, event):
+        menu = QMenu(self.ui)
+        new = menu.addAction('Add')
+        new.triggered.connect(self.add_tag)
+        if len(self.ui.tagsList.selectedItems()) != 0:
+            rem = menu.addAction('Remove')
+            rem.triggered.connect(self.remove_tag)
+        menu.popup(QtGui.QCursor.pos())
+
+    def remove_tag(self):
+        self.disable(self.ui.btn_export, False)
+        text = self.ui.tagsList.itemWidget(self.ui.tagsList.selectedItems()[0]).text()
+        self.session.tags.remove(text)
+        self.update_list()
+
+    def add_tag(self):
+        while True:
+            text, okPressed = QInputDialog.getText(self.ui, "Add a new tag", "Enter tag name below (1 - 16 characters):")
+            if okPressed and 0 < len(text) < 17 and text not in self.session.tags:
+                self.disable(self.ui.btn_export, False)
+                self.session.tags.append(text)
+                self.update_list()
+                break
+            elif not okPressed:
+                break
+            else:
+                msg = QMessageBox()
+                msg.setWindowTitle("Tag Length Error")
+                msg.setText("A tag should be 1 to 16 characters long.")
+                x = msg.exec_()
 
 
 if __name__ == "__main__":

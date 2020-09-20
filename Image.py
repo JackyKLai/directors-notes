@@ -27,6 +27,12 @@ class ImageDialogue:
         self.ui.setFixedSize(695, 604)
         self.image_list = lst
         self.current_index = 0
+        self.ui.previous.setDefault(False)
+        self.ui.previous.setAutoDefault(False)
+        self.ui.next.setDefault(False)
+        self.ui.next.setAutoDefault(False)
+        self.ui.delBtn.setDefault(False)
+        self.ui.delBtn.setAutoDefault(False)
         self.ui.previous.clicked.connect(self.prev)
         self.ui.next.clicked.connect(self.nex)
         self.ui.delBtn.clicked.connect(self.delete)
@@ -45,6 +51,8 @@ class ImageDialogue:
         pixmap = QPixmap.fromImage(image)
         QtCore.QCoreApplication.processEvents()
         self.ui.photo.setPixmap(pixmap.scaled(self.ui.photo.width(), self.ui.photo.height(), Qt.KeepAspectRatio))
+        self.ui.label_index.setText('Image ' + str(self.current_index + 1))
+        self.decide_buttons()
         QtCore.QCoreApplication.processEvents()
 
 
@@ -53,7 +61,6 @@ class ImageDialogue:
         if self.current_index - 1 < 0:
             return
         self.current_index -= 1
-        self.decide_buttons()
         self.display()
         QtCore.QCoreApplication.processEvents()
 
@@ -63,7 +70,6 @@ class ImageDialogue:
         if self.current_index + 1 > len(self.image_list) - 1:
             return
         self.current_index += 1
-        self.decide_buttons()
         self.display()
         QtCore.QCoreApplication.processEvents()
 
@@ -73,16 +79,20 @@ class ImageDialogue:
         if len(self.image_list) == 0:
             QtCore.QCoreApplication.processEvents()
             self.ui.photo.setPixmap(QPixmap())
+            self.ui.label_index.setText('')
             QtCore.QCoreApplication.processEvents()
             self.decide_buttons()
             return
         if self.current_index == 0:
-            self.decide_buttons()
+            QtCore.QCoreApplication.processEvents()
             self.display()
+            QtCore.QCoreApplication.processEvents()
             return
-        self.current_index -= 1
         QtCore.QCoreApplication.processEvents()
-        self.prev()
+        if self.current_index == len(self.image_list):
+            self.prev()
+        else:
+            self.display()
         QtCore.QCoreApplication.processEvents()
 
 
