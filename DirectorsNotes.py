@@ -89,7 +89,7 @@ class dirNotes:
     def __init__(self):
         # Initialization
         self.session = Session()
-        self.ui_mode('Win')
+        self.ui_mode('Mac')
         self.save_path = None
         self.initial_length = 0
         self.note_editing = False
@@ -151,7 +151,7 @@ class dirNotes:
         else:
             layout = resource_path("video_1.ui")
             self.ui = uic.loadUi(layout)
-            self.ui.setFixedSize(1106, 956)
+            self.ui.setFixedSize(1106, 926)
             self.ui.sld_duration = Slider(self.ui)
             self.ui.sld_duration.setGeometry(QtCore.QRect(10, 490, 1081, 29))
 
@@ -393,6 +393,8 @@ class dirNotes:
         if len(self.ui.wgt_notes.selectedItems()) == 0:
             return
         node = self.ui.wgt_notes.selectedItems()[0]
+        QtCore.QCoreApplication.processEvents()
+        self.update_cb()
         if self.ui.wgt_notes.itemWidget(node, 1).text() != self.session.get_active_username():
             QtCore.QCoreApplication.processEvents()
             if isinstance(node, TreeItem):
@@ -571,6 +573,20 @@ class dirNotes:
     #     for tag in self.session.tags:
     #         self.ui.combo_tag.addItem(tag)
     #     QtCore.QCoreApplication.processEvents()
+    def update_cb(self):
+        if not self.ui.wgt_notes.selectedItems():
+            return
+        node = self.ui.wgt_notes.selectedItems()[0]
+        is_note = isinstance(node, TreeItem)
+        QtCore.QCoreApplication.processEvents()
+        for i in range(self.ui.tagsList.count()):
+            item = self.ui.tagsList.item(i)
+            if is_note:
+                self.ui.tagsList.itemWidget(item).setChecked(node.get_note().has_tag(self.ui.tagsList.itemWidget(item).text()))
+            else:
+                self.ui.tagsList.itemWidget(item).setChecked(False)
+        QtCore.QCoreApplication.processEvents()
+
     def update_list(self):
         self.ui.tagsList.clear()
         for tag in self.session.tags:
@@ -584,6 +600,7 @@ class dirNotes:
         self.ui.combo_tag.addItem('All')
         for tag in self.session.tags:
             self.ui.combo_tag.addItem(tag)
+        self.update_cb()
         QtCore.QCoreApplication.processEvents()
 
     def disable(self, obj, bool):
