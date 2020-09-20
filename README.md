@@ -19,5 +19,4 @@ Using the drop-down menu at the top right corner, you can filter notes based on 
 ### Attachments
 You can attach image files to a note. To do this, right click on a note and select "Attach Images." If a note already has images attached to it, right clicking on it gives you the "Show Attachments" option.
 ### Exporting and saving
-Go to File -> Save to save changes. If you imported a notes file to begin with, the app will save changes to the file you imported. To save changes as a new notes file, go to File -> Save as...
-Use "CTRL + C" and "CLRL + A" ("command + C" and "command + A" on Mac) are available as shortcuts.
+Go to File -> Save to save changes. If you imported a notes file to begin with, the app will save changes to the file you imported. To save changes as a new notes file, go to File -> Save as... "CTRL + C" and "CLRL + A" ("command + C" and "command + A" on Mac) are available as shortcuts.
