@@ -13,8 +13,8 @@ Use the slider and the play-pause button to stop at a frame. You can add a note 
 ### Comments
 You can leave comments on a note by right clicking on it and pressing "Comment." Comments can only be left on a note and can't be edited. If you don't like what you've entered, you can delete a comment or a note by selecting it and clicking on the "Delete" button.
 ### Tags
-You can assign tags to a note. You will need to create tags by going to Manage->Tags before assigning them to your notes.
-After defining your tags, they will be available as checkboxes. You will have access to them once you have selected a note.
+You can assign tags to a note. You will need to create tags by right clicking anywhere on the tags box and selecting "Add" before assigning them to your notes. To delete an existing tag, select it, right click and select "Remove."
+After defining your tags, they will be available as checkboxes. They will become checkable once you have selected a note.
 Using the drop-down menu at the top right corner, you can filter notes based on the tags you assigned to them.
 ### Attachments
 You can attach image files to a note. To do this, right click on a note and select "Attach Images." If a note already has images attached to it, right clicking on it gives you the "Show Attachments" option.
