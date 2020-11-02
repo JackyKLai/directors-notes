@@ -1,14 +1,16 @@
 import base64
 import os
 import pickle
+import sys
+
 from PyQt5 import uic, QtCore, QtGui
 from PyQt5.QtCore import QUrl, Qt
 from PyQt5.QtGui import QKeySequence
 from PyQt5.QtMultimedia import QMediaContent, QMediaPlayer
-from PyQt5.QtWidgets import QFileDialog, QApplication, QInputDialog, QMessageBox, QTreeWidgetItem, QLabel, QTextEdit, \
+from PyQt5.QtWidgets import QFileDialog, QInputDialog, QMessageBox, QTreeWidgetItem, QLabel, QTextEdit, \
     QCheckBox, QListWidgetItem, QSlider, QStyleOptionSlider, QStyle, QShortcut, QMenu
-from session import Session
-from Image import ImageDialogue
+from package.session import Session
+from package.dialogs.Image import ImageDialogue
 
 # Define function to import external files when using PyInstaller.
 def resource_path(relative_path):
@@ -17,7 +19,7 @@ def resource_path(relative_path):
         # PyInstaller creates a temp folder and stores path in _MEIPASS
         base_path = sys._MEIPASS
     except Exception:
-        base_path = os.path.abspath(".")
+        base_path = os.path.abspath("..")
 
     return os.path.join(base_path, relative_path)
 
@@ -89,11 +91,11 @@ class dirNotes:
     def __init__(self):
         # Initialization
         self.session = Session()
-        self.ui_mode('Mac')
+        self.ui_mode('Win')
         self.save_path = None
         self.initial_length = 0
         self.note_editing = False
-        # self.ui = uic.loadUi('video_1.ui')  # Loading the ui program designed by designer
+        # self.designer = uic.loadUi('video_1.designer')  # Loading the designer program designed by designer
         # player
         self.player = QMediaPlayer()
         self.player.setVideoOutput(self.ui.wgt_player)
@@ -142,14 +144,14 @@ class dirNotes:
 
     def ui_mode(self, system):
         if system == 'Win':
-            layout = resource_path("video_1_win.ui")
+            layout = os.path.abspath("designer/video_1_win.ui")
             self.ui = uic.loadUi(layout)
             self.ui.setFixedSize(1325, 1290)
             self.ui.sld_duration = Slider(self.ui)
             self.ui.sld_duration.setGeometry(QtCore.QRect(10, 625, 1301, 20))
-            self.ui.setWindowIcon(QtGui.QIcon("icon.ico"))
+            self.ui.setWindowIcon(QtGui.QIcon("../icons/icon.ico"))
         else:
-            layout = resource_path("video_1.ui")
+            layout = os.path.abspath("designer/video_1.ui")
             self.ui = uic.loadUi(layout)
             self.ui.setFixedSize(1106, 926)
             self.ui.sld_duration = Slider(self.ui)
@@ -157,7 +159,7 @@ class dirNotes:
 
     # Open video file
     def open(self):
-        # url = QFileDialog.getOpenFileUrl(self.ui, 'Select A Video',
+        # url = QFileDialog.getOpenFileUrl(self.designer, 'Select A Video',
         #                                  filter="Video File (*.avi *.mp4 *.mov *.flv *.wmv)")[0]
         video, _ = QFileDialog.getOpenFileName(self.ui, "Load Video File", "", "Video File (*.avi *.mp4 *.mov *.flv *.wmvv *.m4v)")
         url = QUrl.fromLocalFile(video)
@@ -174,13 +176,13 @@ class dirNotes:
             x = msg.exec_()
             self.ui.wgt_notes.clear()
             self.ui.tagsList.clear()
-            # self.ui.wgt_notes.setDisabled(True)
-            # self.ui.tagsList.setDisabled(True)
-            # self.ui.btn_play_pause.setDisabled(True)
-            # self.ui.sld_duration.setDisabled(True)
-            # self.ui.btn_note.setDisabled(True)
-            # self.ui.btn_save_as.setDisabled(True)
-            # self.ui.btn_export.setDisabled(True)
+            # self.designer.wgt_notes.setDisabled(True)
+            # self.designer.tagsList.setDisabled(True)
+            # self.designer.btn_play_pause.setDisabled(True)
+            # self.designer.sld_duration.setDisabled(True)
+            # self.designer.btn_note.setDisabled(True)
+            # self.designer.btn_save_as.setDisabled(True)
+            # self.designer.btn_export.setDisabled(True)
             self.disable(self.ui.wgt_notes, True)
             self.disable(self.ui.tagsList, True)
             self.disable(self.ui.btn_play_pause, True)
@@ -204,7 +206,7 @@ class dirNotes:
     # Video real-time location acquisition
     def getPosition(self, p):
         self.ui.sld_duration.setValue(p)
-        # self.displayTime(self.ui.sld_duration.maximum()-p)
+        # self.displayTime(self.designer.sld_duration.maximum()-p)
         self.displayTime(p)
     # Show time remaining
     def displayTime(self, millis):
@@ -225,14 +227,14 @@ class dirNotes:
                 self.session = Session()
                 self.session.new_user(text)
                 self.session.set_video_length(self.initial_length)
-                # self.ui.btn_note.setDisabled(False)
-                # self.ui.btn_export.setDisabled(False)
-                # self.ui.btn_save_as.setDisabled(False)
+                # self.designer.btn_note.setDisabled(False)
+                # self.designer.btn_export.setDisabled(False)
+                # self.designer.btn_save_as.setDisabled(False)
                 self.disable(self.ui.btn_note, False)
                 self.disable(self.ui.btn_export, False)
                 self.disable(self.ui.btn_save_as, False)
                 self.update_list()
-                # self.ui.wgt_notes.setDisabled(False)
+                # self.designer.wgt_notes.setDisabled(False)
                 self.disable(self.ui.wgt_notes, False)
                 self.set_up_media()
                 return
@@ -306,7 +308,7 @@ class dirNotes:
         text, okPressed = QInputDialog.getText(self.ui, "Add a note",
                                                 "Add a note at " + self.convert_ms(self.ui.sld_duration.value()))
         if okPressed and text != '':
-            # self.ui.btn_export.setDisabled(False)
+            # self.designer.btn_export.setDisabled(False)
             self.disable(self.ui.btn_export, False)
             self.session.write_note(self.ui.sld_duration.value(), text)
             self.updateNotes()
@@ -327,7 +329,7 @@ class dirNotes:
         text, okPressed = QInputDialog.getText(self.ui, "Write your comment below: ",
                                                "Write your comment below: ")
         if okPressed and text != '':
-            # self.ui.btn_export.setDisabled(False)
+            # self.designer.btn_export.setDisabled(False)
             self.disable(self.ui.btn_export, False)
             node.get_note().add_comment(self.session.get_active_username(), text)
             self.updateNotes()
@@ -344,12 +346,12 @@ class dirNotes:
         node = self.ui.wgt_notes.selectedItems()[0]
         if isinstance(node, TreeItem):
             self.session.delete_note(node.get_note())
-            # self.ui.btn_export.setDisabled(False)
+            # self.designer.btn_export.setDisabled(False)
             self.disable(self.ui.btn_export, False)
         else:
             tup = (self.ui.wgt_notes.itemWidget(node, 1).text(), self.ui.wgt_notes.itemWidget(node, 2).text())
             node.parent().get_note().remove_comment(tup)
-            # self.ui.btn_export.setDisabled(False)
+            # self.designer.btn_export.setDisabled(False)
             self.disable(self.ui.btn_export, False)
         self.updateNotes()
 
@@ -369,7 +371,7 @@ class dirNotes:
             self.ui.wgt_notes.itemWidget(node, 2).setReadOnly(True)
             self.note_editing = False
             node.get_note().edit_text(self.ui.wgt_notes.itemWidget(node, 2).toPlainText())
-            # self.ui.btn_export.setDisabled(False)
+            # self.designer.btn_export.setDisabled(False)
             self.disable(self.ui.btn_export, False)
             self.ui.wgt_notes.itemWidget(node, 2).setStyleSheet("background-color: rgb(236, 240, 241)")
         QtCore.QCoreApplication.processEvents()
@@ -428,7 +430,7 @@ class dirNotes:
             file = open(self.save_path, "wb")
             pickle.dump(self.session, file)
             file.close()
-            # self.ui.btn_export.setDisabled(True)
+            # self.designer.btn_export.setDisabled(True)
             self.disable(self.ui.btn_export, True)
 
     def loadSession(self):
@@ -448,13 +450,6 @@ class dirNotes:
                 x = msg.exec_()
                 self.ui.wgt_notes.clear()
                 self.ui.tagsList.clear()
-                # self.ui.wgt_notes.setDisabled(True)
-                # self.ui.tagsList.setDisabled(True)
-                # self.ui.btn_play_pause.setDisabled(True)
-                # self.ui.sld_duration.setDisabled(True)
-                # self.ui.btn_note.setDisabled(True)
-                # self.ui.btn_save_as.setDisabled(True)
-                # self.ui.btn_export.setDisabled(True)
                 self.disable(self.ui.wgt_notes, True)
                 self.disable(self.ui.tagsList, False)
                 self.disable(self.ui.btn_play_pause, True)
@@ -508,11 +503,11 @@ class dirNotes:
                 self.session = curr
                 self.save_path = file
                 self.updateNotes()
-                # self.ui.btn_export.setDisabled(True)
-                # self.ui.btn_note.setDisabled(False)
-                # self.ui.menuSession.setDisabled(False)
-                # self.ui.btn_save_as.setDisabled(False)
-                # self.ui.wgt_notes.setDisabled(False)
+                # self.designer.btn_export.setDisabled(True)
+                # self.designer.btn_note.setDisabled(False)
+                # self.designer.menuSession.setDisabled(False)
+                # self.designer.btn_save_as.setDisabled(False)
+                # self.designer.wgt_notes.setDisabled(False)
                 self.disable(self.ui.btn_export, True)
                 self.disable(self.ui.btn_note, False)
                 self.disable(self.ui.menuSession, False)
@@ -522,9 +517,9 @@ class dirNotes:
                 self.update_list()
 
     # def disableAllCheckbox(self, bool):
-    #     self.ui.tagsList.setDisabled(bool)
-    #     for i in range(self.ui.tagsList.count()):
-    #         self.ui.tagsList.itemWidget(self.ui.tagsList.item(i)).setDisabled(bool)
+    #     self.designer.tagsList.setDisabled(bool)
+    #     for i in range(self.designer.tagsList.count()):
+    #         self.designer.tagsList.itemWidget(self.designer.tagsList.item(i)).setDisabled(bool)
     #     QtCore.QCoreApplication.processEvents()
 
 
@@ -568,10 +563,10 @@ class dirNotes:
         return "%02d:%02d:%02d" % (hours, minutes, seconds)
 
     # def update_combo_box(self):
-    #     self.ui.combo_tag.clear()
-    #     self.ui.combo_tag.addItem('All')
+    #     self.designer.combo_tag.clear()
+    #     self.designer.combo_tag.addItem('All')
     #     for tag in self.session.tags:
-    #         self.ui.combo_tag.addItem(tag)
+    #         self.designer.combo_tag.addItem(tag)
     #     QtCore.QCoreApplication.processEvents()
     def update_cb(self):
         if not self.ui.wgt_notes.selectedItems():
@@ -710,14 +705,3 @@ class dirNotes:
                 msg.setWindowTitle("Tag Length Error")
                 msg.setText("A tag should be 1 to 16 characters long.")
                 x = msg.exec_()
-
-
-if __name__ == "__main__":
-    import sys
-    app = QApplication(sys.argv)
-    # app = QApplication([])
-    myPlayer = dirNotes()
-    myPlayer.ui.show()
-    app.aboutToQuit.connect(myPlayer.handle_exit)
-    sys.exit(app.exec_())
-    # app.exec_()

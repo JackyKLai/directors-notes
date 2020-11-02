@@ -1,4 +1,4 @@
-from person import Person
+from package.person import Person
 
 
 class Session:

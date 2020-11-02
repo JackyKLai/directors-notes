@@ -16,13 +16,13 @@ def resource_path(relative_path):
         # PyInstaller creates a temp folder and stores path in _MEIPASS
         base_path = sys._MEIPASS
     except Exception:
-        base_path = os.path.abspath(".")
+        base_path = os.path.abspath("../..")
 
     return os.path.join(base_path, relative_path)
 
 class ImageDialogue:
     def __init__(self, lst):
-        layout = resource_path("image.ui")
+        layout = resource_path("../../designer/image.ui")
         self.ui = uic.loadUi(layout)
         self.ui.setFixedSize(695, 604)
         self.image_list = lst
@@ -36,7 +36,7 @@ class ImageDialogue:
         self.ui.previous.clicked.connect(self.prev)
         self.ui.next.clicked.connect(self.nex)
         self.ui.delBtn.clicked.connect(self.delete)
-        # self.ui.photo.setScaledContents(True)
+        # self.designer.photo.setScaledContents(True)
         self.display()
         self.decide_buttons()
 

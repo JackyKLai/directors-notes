@@ -1,4 +1,4 @@
-from note import Note
+from package.note import Note
 
 
 class Person:

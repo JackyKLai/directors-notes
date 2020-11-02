@@ -14,13 +14,13 @@ def resource_path(relative_path):
         # PyInstaller creates a temp folder and stores path in _MEIPASS
         base_path = sys._MEIPASS
     except Exception:
-        base_path = os.path.abspath(".")
+        base_path = os.path.abspath("../..")
 
     return os.path.join(base_path, relative_path)
 
 class TagsDialogue:
     def __init__(self):
-        layout = resource_path("dialogue.ui")
+        layout = resource_path("../../designer/dialogue.ui")
         self.ui = uic.loadUi(layout)
         self.saved = False
         self.ui.setFixedSize(471, 369)
